@@ -1,612 +1,1819 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>MARCIO.SYS v3.0 — Mission Control</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARCIO.SYS — Study OS v5</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --c:#00f5d4;--c2:#ff6b35;--c3:#f72585;--c4:#7b2ff7;
-  --bg:#060a10;--bg2:#0d1421;--bg3:#111827;
-  --border:rgba(0,245,212,0.18);--border2:rgba(0,245,212,0.45)
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+/* ═══════════════════════════════════════
+   ROOT VARIABLES
+═══════════════════════════════════════ */
+:root {
+  --bg:      #030609;
+  --bg2:     #060c12;
+  --bg3:     #080f18;
+  --panel:   #0a1520;
+  --panel2:  #0d1b28;
+  --glass:   rgba(10,21,32,0.85);
+  --border:  rgba(0,220,255,0.15);
+  --border2: rgba(0,220,255,0.08);
+  --cyan:    #00dcff;
+  --cyan2:   #00b4d8;
+  --cyan3:   #48cae4;
+  --orange:  #ff6b35;
+  --orange2: #ff8c55;
+  --green:   #00ff88;
+  --green2:  #39ff14;
+  --yellow:  #ffd60a;
+  --red:     #ff2d55;
+  --purple:  #b14aed;
+  --blue:    #4361ee;
+  --text:    #a8d8e8;
+  --text2:   #6a9ab0;
+  --dim:     #2a4a5a;
+  --dim2:    #162030;
+  --glow-c:  rgba(0,220,255,0.25);
+  --glow-o:  rgba(255,107,53,0.25);
+  --glow-g:  rgba(0,255,136,0.25);
 }
-html,body{min-height:100vh;background:var(--bg);color:var(--c);font-family:'Share Tech Mono',monospace;overflow-x:hidden}
-.scanline{position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,245,212,0.01) 3px,rgba(0,245,212,0.01) 4px);pointer-events:none;z-index:9999}
-.sys{max-width:780px;margin:0 auto;padding:20px 16px}
 
-/* HEADER */
-.hdr{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:16px}
-.logo{font-family:'Orbitron',sans-serif;font-size:18px;font-weight:900;letter-spacing:4px;color:var(--c)}
-.logo b{color:var(--c2)}
-.logo span{font-size:10px;font-weight:400;color:rgba(0,245,212,0.35);letter-spacing:2px}
-.hdr-right{display:flex;gap:14px;align-items:center}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--c);animation:blink 1.4s infinite;display:inline-block}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.15}}
-.clk{font-size:12px;color:rgba(0,245,212,0.6);letter-spacing:1px}
+/* ═══════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { font-size:14px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Rajdhani', sans-serif;
+  height: 100vh; width: 100vw;
+  overflow: hidden;
+  cursor: default;
+}
 
-/* TABS */
-.tabs{display:flex;gap:2px;margin-bottom:16px;border-bottom:1px solid var(--border);overflow-x:auto}
-.tab{background:transparent;border:none;border-bottom:2px solid transparent;color:rgba(0,245,212,0.35);font-family:'Share Tech Mono',monospace;font-size:10px;letter-spacing:2px;padding:10px 14px;cursor:pointer;transition:all 0.2s;white-space:nowrap}
-.tab:hover{color:var(--c)}.tab.active{color:var(--c);border-bottom-color:var(--c)}
+/* ── GLOBAL SCROLLBAR ── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background: var(--dim2); }
+::-webkit-scrollbar-thumb { background: var(--dim); border-radius:2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--cyan2); }
 
-.panel{display:none}.panel.active{display:block}
+/* ── SCANLINES ── */
+body::before {
+  content:''; position:fixed; inset:0; z-index:9998; pointer-events:none;
+  background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,220,255,0.008) 3px,rgba(0,220,255,0.008) 4px);
+}
+
+/* ── GRID MESH BG ── */
+.mesh {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:
+    linear-gradient(rgba(0,220,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,220,255,0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+.mesh::after {
+  content:''; position:absolute; inset:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 0%, rgba(0,100,200,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 100%, rgba(180,60,255,0.05) 0%, transparent 60%);
+}
+
+/* ═══════════════════════════════════════
+   APP LAYOUT
+═══════════════════════════════════════ */
+#app {
+  position:relative; z-index:1;
+  width:100vw; height:100vh;
+  display:grid;
+  grid-template-rows: 44px 1fr;
+  grid-template-columns: 240px 1fr;
+  grid-template-areas: "tb tb" "sb main";
+}
+
+/* ═══════════════════════════════════════
+   TITLEBAR
+═══════════════════════════════════════ */
+#titlebar {
+  grid-area: tb;
+  background: linear-gradient(90deg, #03080f 0%, #060d17 60%, #03080f 100%);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 14px; gap: 10px;
+  position: relative; overflow: hidden;
+  -webkit-app-region: drag;
+}
+#titlebar::after {
+  content:''; position:absolute; bottom:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent 0%, var(--cyan) 30%, var(--purple) 70%, transparent 100%);
+  opacity:.4; animation: tbLine 4s infinite;
+}
+@keyframes tbLine { 0%,100%{opacity:.2} 50%{opacity:.7} }
+
+.tb-logo {
+  font-family:'Orbitron',monospace; font-size:12px; font-weight:900;
+  color:var(--cyan); letter-spacing:3px;
+  text-shadow:0 0 12px var(--cyan), 0 0 24px rgba(0,220,255,.3);
+  -webkit-app-region:no-drag; white-space:nowrap;
+}
+.tb-divider { width:1px; height:18px; background:var(--dim); flex-shrink:0; }
+.tb-status {
+  font-family:'Share Tech Mono',monospace; font-size:9px;
+  color:var(--text2); letter-spacing:1px;
+  display:flex; align-items:center; gap:6px;
+}
+.tb-led {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--green2); box-shadow:0 0 6px var(--green2);
+  animation: ledBlink 2s infinite;
+}
+@keyframes ledBlink { 0%,100%{opacity:1;box-shadow:0 0 6px var(--green2)} 50%{opacity:.3;box-shadow:none} }
+
+/* AV BARS */
+.av { display:flex; align-items:flex-end; gap:2px; height:16px; }
+.av-b {
+  width:2px; background:var(--cyan); border-radius:1px; opacity:.7;
+  animation: avUp 1s infinite ease-in-out;
+}
+.av-b:nth-child(1){height:5px;animation-delay:0s}
+.av-b:nth-child(2){height:10px;animation-delay:.1s}
+.av-b:nth-child(3){height:7px;animation-delay:.2s}
+.av-b:nth-child(4){height:13px;animation-delay:.05s}
+.av-b:nth-child(5){height:8px;animation-delay:.15s}
+.av-b:nth-child(6){height:11px;animation-delay:.25s}
+@keyframes avUp{0%,100%{transform:scaleY(.3);opacity:.3}50%{transform:scaleY(1);opacity:.9}}
+.av.stopped .av-b { animation-play-state:paused; opacity:.2; }
+
+.tb-right { margin-left:auto; display:flex; align-items:center; gap:12px; -webkit-app-region:no-drag; }
+.tb-datetime {
+  display:flex; flex-direction:column; align-items:flex-end;
+}
+.tb-time { font-family:'Orbitron',monospace; font-size:13px; font-weight:600; color:var(--cyan); letter-spacing:2px; }
+.tb-date { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text2); letter-spacing:1px; }
+
+.win-controls { display:flex; gap:5px; }
+.wc { width:12px; height:12px; border-radius:50%; border:none; cursor:pointer; transition:.2s; }
+.wc:hover{transform:scale(1.2)}
+.wc-r{background:#ff5f57}
+.wc-y{background:#febc2e}
+.wc-g{background:#28c840}
+
+/* ═══════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════ */
+#sidebar {
+  grid-area: sb;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction:column;
+  overflow: hidden;
+}
+
+/* ── TIMER SECTION ── */
+.sb-timer {
+  padding: 14px 12px 10px;
+  border-bottom: 1px solid var(--border2);
+  flex-shrink: 0;
+}
+.sb-sec-lbl {
+  font-family:'Share Tech Mono',monospace; font-size:8px;
+  color:var(--orange); letter-spacing:3px; text-transform:uppercase;
+  margin-bottom:8px; opacity:.8;
+}
+
+.ring-wrap { position:relative; width:130px; height:130px; margin:0 auto 10px; }
+.ring-svg { position:absolute; inset:0; transform:rotate(-90deg); }
+.r-track { fill:none; stroke:var(--dim2); stroke-width:8; }
+.r-fill  {
+  fill:none; stroke:var(--cyan); stroke-width:8; stroke-linecap:round;
+  stroke-dasharray:376; stroke-dashoffset:0;
+  filter:drop-shadow(0 0 8px var(--cyan));
+  transition:stroke-dashoffset 1s linear, stroke .4s, filter .4s;
+}
+.ring-inner {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.r-digits {
+  font-family:'Orbitron',monospace; font-size:28px; font-weight:700;
+  color:var(--cyan); text-shadow:0 0 14px var(--cyan); line-height:1;
+}
+.r-mode-lbl {
+  font-family:'Share Tech Mono',monospace; font-size:7px;
+  color:var(--text2); letter-spacing:2px; margin-top:3px;
+}
+
+.mode-row { display:flex; gap:3px; justify-content:center; margin-bottom:8px; }
+.mpill {
+  font-family:'Share Tech Mono',monospace; font-size:8px;
+  padding:3px 7px; border:1px solid var(--dim); color:var(--dim);
+  background:transparent; cursor:pointer; transition:.2s; letter-spacing:1px;
+}
+.mpill.active { border-color:var(--cyan); color:var(--cyan); background:rgba(0,220,255,.08); }
+.mpill:hover:not(.active) { border-color:var(--cyan3); color:var(--cyan3); }
+
+.t-btns { display:flex; gap:5px; justify-content:center; }
+.t-main {
+  font-family:'Orbitron',monospace; font-size:9px; font-weight:700;
+  padding:7px 16px; border:1px solid var(--cyan); color:var(--cyan);
+  background:rgba(0,220,255,.08); cursor:pointer; letter-spacing:2px;
+  transition:.2s;
+}
+.t-main:hover { background:rgba(0,220,255,.2); box-shadow:0 0 12px var(--glow-c); }
+.t-rst {
+  font-family:'Share Tech Mono',monospace; font-size:8px;
+  padding:7px 10px; border:1px solid var(--dim); color:var(--dim);
+  background:transparent; cursor:pointer; transition:.2s;
+}
+.t-rst:hover { border-color:var(--orange); color:var(--orange); }
+
+.sess-row {
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  margin-top:8px; padding-top:8px; border-top:1px solid var(--border2);
+}
+.sess-lbl { font-family:'Share Tech Mono',monospace; font-size:8px; color:var(--text2); }
+.sdots { display:flex; gap:4px; }
+.sdot { width:9px; height:9px; border-radius:2px; border:1px solid var(--dim); transition:.3s; }
+.sdot.lit { background:var(--orange); border-color:var(--orange); box-shadow:0 0 6px var(--orange); }
+
+/* ── NAV SECTION ── */
+.sb-nav-lbl {
+  font-family:'Share Tech Mono',monospace; font-size:8px;
+  color:var(--orange); letter-spacing:3px;
+  padding:8px 12px 4px; opacity:.8;
+}
+.sb-nav { flex:1; overflow-y:auto; }
+
+.nav-item {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px; cursor:pointer;
+  border-left:2px solid transparent;
+  transition:.2s; position:relative;
+}
+.nav-item:hover { background:rgba(0,220,255,.04); }
+.nav-item.active { background:rgba(0,220,255,.08); border-left-color:var(--cyan); }
+.ni-icon { font-size:14px; flex-shrink:0; }
+.ni-info { flex:1; min-width:0; }
+.ni-title {
+  font-family:'Share Tech Mono',monospace; font-size:9px;
+  color:var(--text); letter-spacing:1px;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.nav-item.active .ni-title { color:var(--cyan); }
+.ni-sub { font-size:9px; color:var(--text2); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ni-badge {
+  font-family:'Share Tech Mono',monospace; font-size:7px;
+  padding:2px 5px; font-weight:bold; flex-shrink:0;
+}
+.badge-active  { background:var(--cyan); color:#000; }
+.badge-done    { background:var(--green); color:#000; }
+.badge-next    { background:var(--purple); color:#fff; }
+.badge-pending { background:var(--orange); color:#000; }
+.badge-warn    { background:var(--yellow); color:#000; }
+
+/* ── PROGRESS SECTION ── */
+.sb-prog {
+  padding:10px 12px;
+  border-top:1px solid var(--border2);
+  flex-shrink:0;
+}
+.prog-item { margin-bottom:7px; }
+.prog-item:last-child{margin-bottom:0}
+.prog-row {
+  display:flex; justify-content:space-between;
+  font-family:'Share Tech Mono',monospace; font-size:8px;
+  color:var(--text2); margin-bottom:3px;
+}
+.prog-row span:last-child { color:var(--text); }
+.pbar { height:3px; background:var(--dim2); position:relative; }
+.pfill { height:100%; transition:width 1.5s ease; position:relative; }
+.pfill::after {
+  content:''; position:absolute; right:-1px; top:-3px;
+  width:7px; height:7px; border-radius:50%; background:inherit;
+  box-shadow:0 0 5px currentColor;
+}
+.pc{background:var(--cyan)} .po{background:var(--orange)} .pg{background:var(--green)}
+.pp{background:var(--purple)} .py{background:var(--yellow)} .pr{background:var(--red)}
+
+/* ═══════════════════════════════════════
+   MAIN AREA
+═══════════════════════════════════════ */
+#main {
+  grid-area: main;
+  display:flex; flex-direction:column;
+  overflow:hidden; background:var(--bg3);
+}
+
+/* ── TAB BAR ── */
+#tabbar {
+  display:flex; align-items:center;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  padding:0 16px; gap:0;
+  overflow-x:auto; flex-shrink:0;
+}
+#tabbar::-webkit-scrollbar{height:0}
+.tab-btn {
+  font-family:'Share Tech Mono',monospace; font-size:9px;
+  padding:10px 14px; border:none; background:transparent;
+  color:var(--text2); cursor:pointer; white-space:nowrap;
+  border-bottom:2px solid transparent; transition:.2s; letter-spacing:1px;
+  display:flex; align-items:center; gap:5px;
+}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.tab-dot{width:5px;height:5px;border-radius:50%;background:var(--green2);box-shadow:0 0 4px var(--green2)}
+.tab-dot.orange{background:var(--orange);box-shadow:0 0 4px var(--orange)}
+.tab-dot.purple{background:var(--purple);box-shadow:0 0 4px var(--purple)}
+
+/* ── CONTENT AREA ── */
+#content { flex:1; overflow-y:auto; padding:16px 20px; }
+
+/* ─ DASHBOARD VIEW ─ */
+.dash-grid {
+  display:grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap:12px;
+  margin-bottom:14px;
+}
+@media(max-width:900px){.dash-grid{grid-template-columns:1fr 1fr}}
+
+.stat-card {
+  background:var(--panel); border:1px solid var(--border);
+  padding:14px; position:relative; overflow:hidden;
+  transition:.3s; cursor:default;
+}
+.stat-card:hover { border-color:rgba(0,220,255,.35); transform:translateY(-1px); box-shadow:0 4px 20px rgba(0,0,0,.4); }
+.stat-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+}
+.sc-cyan::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent)}
+.sc-orange::before{background:linear-gradient(90deg,transparent,var(--orange),transparent)}
+.sc-green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
+.sc-purple::before{background:linear-gradient(90deg,transparent,var(--purple),transparent)}
+.sc-yellow::before{background:linear-gradient(90deg,transparent,var(--yellow),transparent)}
+.sc-red::before{background:linear-gradient(90deg,transparent,var(--red),transparent)}
+
+.sc-label { font-family:'Share Tech Mono',monospace; font-size:8px; color:var(--text2); letter-spacing:2px; margin-bottom:6px; }
+.sc-value { font-family:'Orbitron',monospace; font-size:22px; font-weight:700; line-height:1; }
+.sc-sub { font-size:10px; color:var(--text2); margin-top:4px; }
+.sc-icon { position:absolute; right:12px; top:12px; font-size:20px; opacity:.3; }
+.sc-bar { margin-top:8px; height:3px; background:var(--dim2); }
+.sc-bar-fill { height:100%; transition:width 1.5s ease; }
+
+/* ─ COURSERA VIEW ─ */
+.course-list { display:flex; flex-direction:column; gap:10px; }
+.course-card {
+  background:var(--panel); border:1px solid var(--border);
+  padding:14px 16px; display:flex; align-items:center; gap:14px;
+  transition:.2s; position:relative; overflow:hidden;
+}
+.course-card:hover{border-color:rgba(0,220,255,.3);background:var(--panel2)}
+.course-card::after {
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+}
+.cc-done::after{background:var(--green)}
+.cc-active::after{background:var(--cyan);animation:pulse2 2s infinite}
+.cc-next::after{background:var(--purple)}
+@keyframes pulse2{0%,100%{opacity:1}50%{opacity:.3}}
+
+.cc-num {
+  font-family:'Orbitron',monospace; font-size:10px; font-weight:700;
+  color:var(--text2); flex-shrink:0; min-width:30px;
+}
+.cc-status-icon{font-size:20px;flex-shrink:0}
+.cc-info{flex:1;min-width:0}
+.cc-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--text)}
+.cc-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text2);margin-top:2px}
+.cc-prog-bar{margin-top:8px;height:4px;background:var(--dim2);position:relative}
+.cc-prog-fill{height:100%;transition:width 1.5s ease;position:relative}
+.cc-prog-fill::after{
+  content:'';position:absolute;right:-2px;top:-3px;
+  width:8px;height:8px;border-radius:50%;background:inherit;
+  box-shadow:0 0 6px currentColor;
+}
+.cc-badge{
+  font-family:'Share Tech Mono',monospace;font-size:8px;
+  padding:4px 8px;flex-shrink:0;
+}
+.cc-action{
+  font-family:'Orbitron',monospace;font-size:9px;font-weight:700;
+  padding:7px 14px;border:1px solid;background:transparent;
+  cursor:pointer;letter-spacing:1px;transition:.2s;flex-shrink:0;
+}
+.cc-action.resume{border-color:var(--cyan);color:var(--cyan)}
+.cc-action.resume:hover{background:rgba(0,220,255,.15);box-shadow:0 0 10px var(--glow-c)}
+.cc-action.done-btn{border-color:var(--green);color:var(--green)}
+.cc-action.linked{border-color:var(--blue);color:var(--blue)}
+.cc-action.linked:hover{background:rgba(67,97,238,.15)}
+.cc-deadline{
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  color:var(--yellow);padding:3px 8px;border:1px solid rgba(255,214,10,.3);
+  background:rgba(255,214,10,.06);margin-top:6px;display:inline-block;
+}
+
+/* ─ HORAS COMPLEMENTARES VIEW ─ */
+.horas-header{
+  background:var(--panel);border:1px solid var(--border);
+  padding:16px;margin-bottom:12px;position:relative;overflow:hidden;
+}
+.horas-header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--orange),var(--cyan),transparent);
+}
+.horas-big-bar{
+  background:var(--dim2);height:8px;border-radius:0;margin:10px 0 6px;
+  position:relative;overflow:visible;
+}
+.horas-big-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--cyan),var(--orange));
+  transition:width 1.5s ease;position:relative;
+}
+.horas-big-fill::after{
+  content:'';position:absolute;right:0;top:-4px;
+  width:16px;height:16px;border-radius:50%;
+  background:var(--orange);box-shadow:0 0 10px var(--orange);
+  animation:pulse3 2s infinite;
+}
+@keyframes pulse3{0%,100%{box-shadow:0 0 8px var(--orange)}50%{box-shadow:0 0 20px var(--orange)}}
+.horas-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.horas-stat{text-align:center}
+.horas-num{font-family:'Orbitron',monospace;font-size:28px;font-weight:900;line-height:1}
+.horas-sub{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:1px}
+
+.comp-table{
+  background:var(--panel);border:1px solid var(--border);
+  overflow:hidden;
+}
+.comp-table-head{
+  display:grid;grid-template-columns:1fr 2fr 80px 90px 90px 70px;
+  gap:0;padding:8px 14px;
+  background:var(--bg2);border-bottom:1px solid var(--border);
+}
+.cth{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text2);letter-spacing:2px;text-transform:uppercase}
+.comp-row{
+  display:grid;grid-template-columns:1fr 2fr 80px 90px 90px 70px;
+  gap:0;padding:10px 14px;border-bottom:1px solid var(--border2);
+  transition:.2s;align-items:center;
+}
+.comp-row:last-child{border-bottom:none}
+.comp-row:hover{background:rgba(0,220,255,.04)}
+.crd{font-size:11px;color:var(--text);line-height:1.3}
+.crd-sub{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text2);margin-top:2px}
+.status-pill{
+  font-family:'Share Tech Mono',monospace;font-size:8px;
+  padding:3px 7px;text-align:center;font-weight:bold;
+  border:1px solid;display:inline-block;
+}
+.sp-ok{border-color:var(--green);color:var(--green);background:rgba(0,255,136,.08)}
+.sp-no{border-color:var(--red);color:var(--red);background:rgba(255,45,85,.08)}
+.sp-wait{border-color:var(--yellow);color:var(--yellow);background:rgba(255,214,10,.08)}
+.ch-num{font-family:'Orbitron',monospace;font-size:11px;font-weight:700}
+
+/* ─ DISCIPLINAS VIEW ─ */
+.disc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:800px){.disc-grid{grid-template-columns:1fr}}
+
+.disc-card{
+  background:var(--panel);border:1px solid var(--border);
+  padding:14px;position:relative;overflow:hidden;
+  transition:.2s;
+}
+.disc-card:hover{border-color:rgba(0,220,255,.3);transform:translateY(-1px)}
+.disc-period{
+  font-family:'Share Tech Mono',monospace;font-size:8px;
+  color:var(--text2);letter-spacing:2px;margin-bottom:6px;
+}
+.disc-code{
+  font-family:'Share Tech Mono',monospace;font-size:8px;
+  color:var(--dim);margin-bottom:4px;
+}
+.disc-title{font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;color:var(--text);line-height:1.3}
+.disc-status{
+  margin-top:8px;display:flex;align-items:center;gap:6px;
+}
+.disc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.d-green{background:var(--green);box-shadow:0 0 6px var(--green)}
+.d-cyan{background:var(--cyan);box-shadow:0 0 6px var(--cyan)}
+.d-orange{background:var(--orange);box-shadow:0 0 6px var(--orange)}
+.d-purple{background:var(--purple);box-shadow:0 0 6px var(--purple)}
+.d-yellow{background:var(--yellow);box-shadow:0 0 6px var(--yellow)}
+.disc-status-lbl{font-family:'Share Tech Mono',monospace;font-size:9px}
+.disc-accent{position:absolute;top:0;left:0;bottom:0;width:3px}
+
+/* ─ MÓDULOS STUDY VIEW ─ */
+.study-layout{display:grid;grid-template-columns:1fr 300px;gap:14px}
+@media(max-width:900px){.study-layout{grid-template-columns:1fr}}
+
+.panel-box{background:var(--panel);border:1px solid var(--border);padding:14px}
+.panel-title{
+  font-family:'Orbitron',monospace;font-size:8px;color:var(--orange);
+  letter-spacing:3px;margin-bottom:12px;padding-bottom:8px;
+  border-bottom:1px solid rgba(255,107,53,.2);
+}
+.topic-item{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 0;border-bottom:1px solid var(--border2);
+  animation:fadeSlide .4s ease both;
+}
+.topic-item:last-child{border-bottom:none}
+@keyframes fadeSlide{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
+.ti-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.ti-text{font-size:13px;color:var(--text);line-height:1.4;font-weight:500}
+.ti-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text2);display:block;margin-top:2px}
+
+.code-box{
+  background:#020810;border:1px solid rgba(0,220,255,.12);
+  padding:12px;margin-top:12px;
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:#7ec8e3;line-height:1.8;overflow-x:auto;white-space:pre;
+}
+.kw{color:var(--cyan)}.str{color:var(--green)}.cmt{color:var(--dim)}.fn{color:var(--orange)}.num{color:var(--yellow)}.cls{color:var(--purple)}
+
+.tags-wrap{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+.tag{font-family:'Share Tech Mono',monospace;font-size:8px;padding:3px 7px;border:1px solid;letter-spacing:1px}
+.tc{border-color:var(--cyan2);color:var(--cyan2)}
+.tg{border-color:var(--green);color:var(--green)}
+.to{border-color:var(--orange);color:var(--orange)}
+.tp{border-color:var(--purple);color:var(--purple)}
+.ty{border-color:var(--yellow);color:var(--yellow)}
+
+.alert-strip{
+  margin-top:12px;padding:10px 12px;
+  border-left:3px solid var(--yellow);
+  background:rgba(255,214,10,.05);
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:var(--yellow);line-height:1.6;
+}
+
+/* CHECKPOINTS */
+.cp-list{display:flex;flex-direction:column;gap:1px}
+.cp-item{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 0;border-bottom:1px solid var(--border2);
+  cursor:pointer;transition:.2s;
+}
+.cp-item:last-child{border-bottom:none}
+.cp-item:hover{padding-left:4px}
+.cp-box{
+  width:14px;height:14px;border:1px solid var(--dim);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+}
+.cp-item.done .cp-box{border-color:var(--green);background:rgba(0,255,136,.12)}
+.cp-tick{color:var(--green);font-size:10px;display:none;font-weight:bold}
+.cp-item.done .cp-tick{display:block}
+.cp-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text);transition:.2s;line-height:1.4}
+.cp-item.done .cp-lbl{color:var(--dim);text-decoration:line-through}
+
+/* TIPS */
+.tip-item{
+  display:flex;gap:8px;padding:7px 0;
+  border-bottom:1px solid var(--border2);
+  font-size:11px;color:var(--text);line-height:1.5;
+}
+.tip-item:last-child{border-bottom:none}
+.tip-arrow{color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:10px;flex-shrink:0;margin-top:1px}
+
+/* ── EDITABLE VALUES ── */
+.editable-val {
+  cursor: pointer;
+  position: relative;
+  transition: .2s;
+}
+.editable-val:hover {
+  text-shadow: 0 0 12px var(--cyan), 0 0 24px rgba(0,220,255,.4) !important;
+  opacity: .9;
+}
+.editable-val::after {
+  content: '✎';
+  position: absolute;
+  top: -6px;
+  right: -14px;
+  font-size: 9px;
+  color: var(--cyan);
+  opacity: 0;
+  transition: opacity .2s;
+  font-family: sans-serif;
+}
+.editable-val:hover::after { opacity: .7; }
+
+.edit-input-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(0,220,255,.08);
+  border: 1px solid var(--cyan);
+  padding: 2px 6px;
+  box-shadow: 0 0 12px var(--glow-c);
+}
+.edit-input {
+  font-family: 'Orbitron', monospace;
+  font-size: inherit;
+  font-weight: 700;
+  color: var(--cyan);
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 80px;
+  text-align: center;
+}
+.edit-ok {
+  font-size: 10px;
+  color: var(--green);
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  padding: 0 3px;
+}
+.edit-ok:hover { color: #fff; }
+
+/* ── NOTIFICATION ── */
+#notif{
+  position:fixed;bottom:20px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--panel2);border:1px solid var(--cyan);
+  color:var(--cyan);font-family:'Orbitron',monospace;font-size:10px;
+  padding:10px 20px;letter-spacing:2px;
+  box-shadow:0 0 30px var(--glow-c);
+  transition:transform .4s cubic-bezier(.175,.885,.32,1.275);
+  z-index:10000;white-space:nowrap;pointer-events:none;
+}
+#notif.show{transform:translateX(-50%) translateY(0)}
+#notif.warn{border-color:var(--yellow);color:var(--yellow);box-shadow:0 0 30px var(--glow-o)}
+#notif.ok{border-color:var(--green);color:var(--green);box-shadow:0 0 30px var(--glow-g)}
 
 /* SECTION TITLE */
-.stitle{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:3px;color:rgba(0,245,212,0.4);margin-bottom:10px;display:flex;align-items:center;gap:8px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
-
-/* CARDS */
-.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
-.card{background:var(--bg2);border:1px solid var(--border);padding:14px;position:relative;overflow:hidden}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--c)}
-.card.o::before{background:var(--c2)}.card.p::before{background:var(--c3)}.card.v::before{background:var(--c4)}
-.lbl{font-size:9px;letter-spacing:3px;color:rgba(0,245,212,0.4);margin-bottom:6px}
-.val{font-family:'Orbitron',sans-serif;font-size:24px;font-weight:700;line-height:1}
-.val.o{color:var(--c2)}.val.p{color:var(--c3)}.val.v{color:var(--c4)}
-.sub{font-size:10px;color:rgba(0,245,212,0.3);margin-top:4px}
-
-/* MISSIONS */
-.mission{background:var(--bg2);border:1px solid var(--border);padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all 0.2s}
-.mission:hover{border-color:var(--c2);background:rgba(255,107,53,0.04)}
-.mission.done .mtitle{text-decoration:line-through;color:rgba(0,245,212,0.3)}
-.micon{width:34px;height:34px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.mbody{flex:1;min-width:0}
-.mtitle{font-size:12px;color:var(--c);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mmeta{font-size:10px;color:rgba(0,245,212,0.35);margin-top:3px}
-.badge{font-size:9px;padding:3px 8px;letter-spacing:1px;flex-shrink:0}
-.ba{background:rgba(0,245,212,0.08);border:1px solid var(--c);color:var(--c)}
-.bp{background:rgba(255,107,53,0.08);border:1px solid var(--c2);color:var(--c2)}
-.bd{background:rgba(0,245,212,0.03);border:1px solid rgba(0,245,212,0.15);color:rgba(0,245,212,0.25)}
-
-/* SKILL BARS */
-.pb-wrap{margin-bottom:10px}
-.pb-row{display:flex;justify-content:space-between;font-size:10px;color:rgba(0,245,212,0.45);margin-bottom:4px}
-.pb{height:5px;background:rgba(0,245,212,0.07);overflow:hidden}
-.pbf{height:100%;transition:width 1.4s ease}
-.pbf.c{background:var(--c)}.pbf.o{background:var(--c2)}.pbf.p{background:var(--c3)}
-
-/* TERMINAL */
-.terminal{background:#040710;border:1px solid var(--border);padding:14px;font-size:11px;line-height:1.9;margin-bottom:12px}
-.tp{color:rgba(0,245,212,0.4)}.tc{color:var(--c)}.tok{color:#4ade80}.twarn{color:var(--c2)}.terr{color:var(--c3)}.tout{color:rgba(0,245,212,0.55)}
-
-/* XP BAR */
-.xp-bar-full{background:rgba(0,245,212,0.04);border:1px solid var(--border);padding:14px;margin-top:12px}
-.xp-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
-.xp-lbl{font-family:'Orbitron',sans-serif;font-size:9px;letter-spacing:2px;color:rgba(0,245,212,0.4)}
-.xp-v{font-family:'Orbitron',sans-serif;font-size:12px;color:var(--c)}
-.xp-b{height:8px;background:rgba(0,245,212,0.06);overflow:hidden}
-.xp-f{height:100%;background:linear-gradient(90deg,var(--c4),var(--c),var(--c2));width:62%;transition:width 1.4s ease}
-.xp-sub{display:flex;justify-content:space-between;font-size:9px;color:rgba(0,245,212,0.25);margin-top:5px;letter-spacing:1px}
-
-/* BUTTONS */
-.btn-add{background:transparent;border:1px solid var(--border2);color:var(--c);font-family:'Share Tech Mono',monospace;font-size:10px;padding:10px;cursor:pointer;letter-spacing:2px;width:100%;margin-top:8px;transition:all 0.2s}
-.btn-add:hover{background:rgba(0,245,212,0.07)}
-
-/* POMODORO */
-.pomo-wrap{background:var(--bg2);border:1px solid var(--border);padding:24px;text-align:center;position:relative}
-.pomo-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--c3),var(--c2),var(--c))}
-.pomo-ring{width:180px;height:180px;margin:0 auto 14px;position:relative}
-.pomo-svg{transform:rotate(-90deg)}
-.pomo-track{fill:none;stroke:rgba(0,245,212,0.08);stroke-width:10}
-.pomo-prog{fill:none;stroke:var(--c);stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
-.pomo-time{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',sans-serif;font-size:32px;font-weight:700;color:var(--c)}
-.pomo-mode-lbl{font-size:9px;letter-spacing:3px;color:rgba(0,245,212,0.45);margin-bottom:10px}
-.pomo-sublbl{font-size:11px;color:rgba(0,245,212,0.4);margin-bottom:14px;letter-spacing:1px}
-.pomo-sessions{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
-.psess{width:16px;height:16px;border:1px solid rgba(0,245,212,0.2);background:transparent;transition:background 0.3s}
-.psess.done{background:var(--c)}
-.pomo-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
-.pbtn{background:transparent;border:1px solid var(--border2);color:var(--c);font-family:'Share Tech Mono',monospace;font-size:11px;padding:8px 16px;cursor:pointer;letter-spacing:2px;transition:all 0.2s}
-.pbtn:hover{background:rgba(0,245,212,0.07)}
-.pbtn.red{border-color:var(--c3);color:var(--c3)}.pbtn.red:hover{background:rgba(247,37,133,0.07)}
-.pbtn.orange{border-color:var(--c2);color:var(--c2)}.pbtn.orange:hover{background:rgba(255,107,53,0.07)}
-.pomo-task-box{background:rgba(0,245,212,0.04);border:1px solid var(--border);padding:10px 14px;font-size:11px;color:rgba(0,245,212,0.6);margin-top:12px;letter-spacing:1px}
-.pomo-stats{font-size:10px;color:rgba(0,245,212,0.3);margin-top:12px;letter-spacing:1px}
-
-/* CALENDAR */
-.cal-wrap{background:var(--bg2);border:1px solid var(--border);padding:16px;margin-bottom:12px}
-.cal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.cal-nav{background:transparent;border:1px solid var(--border);color:var(--c);font-family:'Share Tech Mono',monospace;font-size:14px;padding:5px 12px;cursor:pointer}
-.cal-nav:hover{background:rgba(0,245,212,0.06)}
-.cal-month{font-family:'Orbitron',sans-serif;font-size:13px;letter-spacing:2px}
-.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px}
-.cal-dlbl{text-align:center;font-size:9px;color:rgba(0,245,212,0.3);padding:5px 0;letter-spacing:1px}
-.cal-cells{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-.cal-cell{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;position:relative;border:1px solid transparent;transition:all 0.15s;border-radius:2px}
-.cal-cell:hover{border-color:var(--border2)}
-.cal-cell.empty{opacity:0;pointer-events:none}
-.cal-cell.today{border-color:var(--c);color:var(--c);font-weight:700}
-.cal-cell.has-ev::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--c2)}
-.cal-cell.deadline{border-color:var(--c3);color:var(--c3)}
-.ev-item{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:11px}
-.ev-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.ev-date{font-size:10px;color:rgba(0,245,212,0.4);width:70px;flex-shrink:0}
-
-/* GITHUB */
-.gh-wrap{background:var(--bg2);border:1px solid var(--border);padding:16px;margin-bottom:12px;position:relative;overflow:hidden}
-.gh-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--c4),var(--c),var(--c2))}
-.gh-profile-row{display:flex;gap:16px;align-items:center;margin-bottom:16px}
-.gh-avatar{width:56px;height:56px;border-radius:50%;border:2px solid var(--c);background:linear-gradient(135deg,var(--c4),var(--c));display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:18px;font-weight:900;color:#000;flex-shrink:0}
-.gh-name{font-family:'Orbitron',sans-serif;font-size:14px;color:var(--c);letter-spacing:2px}
-.gh-bio{font-size:11px;color:rgba(0,245,212,0.4);margin-top:4px;line-height:1.6}
-.stats4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
-.stat-box{background:var(--bg3);border:1px solid var(--border);padding:12px;text-align:center}
-.stat-val{font-family:'Orbitron',sans-serif;font-size:20px;font-weight:700;color:var(--c)}
-.stat-val.o{color:var(--c2)}.stat-val.p{color:var(--c3)}.stat-val.v{color:var(--c4)}
-.stat-lbl{font-size:9px;color:rgba(0,245,212,0.35);margin-top:4px;letter-spacing:1px}
-.contrib-grid{display:grid;grid-template-columns:repeat(52,1fr);gap:2px;margin-bottom:8px}
-.cc{aspect-ratio:1;border-radius:1px;background:rgba(0,245,212,0.05)}
-.cc.l1{background:rgba(0,245,212,0.15)}.cc.l2{background:rgba(0,245,212,0.3)}
-.cc.l3{background:rgba(0,245,212,0.55)}.cc.l4{background:var(--c)}
-.contrib-legend{display:flex;align-items:center;gap:6px;justify-content:flex-end;font-size:9px;color:rgba(0,245,212,0.3)}
-.cl{width:10px;height:10px;border-radius:1px}
-.repo-item{display:flex;justify-content:space-between;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer;gap:10px}
-.repo-item:last-child{border-bottom:none}
-.repo-item:hover .repo-name{color:var(--c2)}
-.repo-left{flex:1;min-width:0}
-.repo-name{font-size:12px;color:var(--c);transition:color 0.2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.repo-desc{font-size:10px;color:rgba(0,245,212,0.3);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.repo-meta{display:flex;gap:8px;align-items:center;flex-shrink:0}
-.repo-lang{font-size:9px;padding:3px 8px;border:1px solid var(--border2);color:rgba(0,245,212,0.6)}
-.lang-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
-.lb-wrap{margin-bottom:10px}
-.lb-row{display:flex;justify-content:space-between;font-size:10px;color:rgba(0,245,212,0.45);margin-bottom:4px}
-.lb{height:4px;background:rgba(0,245,212,0.07);overflow:hidden}
-.lb-fill{height:100%;transition:width 1.2s ease}
-
-/* FOOTER */
-.footer{text-align:center;padding:20px 0;font-size:10px;color:rgba(0,245,212,0.2);letter-spacing:2px;border-top:1px solid var(--border);margin-top:20px}
+.view-title{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;
+}
+.vt-tag{
+  font-family:'Share Tech Mono',monospace;font-size:8px;
+  padding:3px 9px;border:1px solid var(--orange);color:var(--orange);
+  letter-spacing:2px;flex-shrink:0;
+}
+.vt-h{
+  font-family:'Orbitron',monospace;font-size:clamp(13px,2vw,18px);
+  font-weight:900;color:var(--cyan);
+  text-shadow:0 0 14px rgba(0,220,255,.35);letter-spacing:2px;
+}
+.vt-sub{font-size:11px;color:var(--text2);font-style:italic;margin-top:2px}
 </style>
 </head>
 <body>
-<div class="scanline"></div>
-<div class="sys">
+<div class="mesh"></div>
 
-<!-- HEADER -->
-<div class="hdr">
-  <div class="logo">MARCIO<b>.</b>SYS <span>v3.0 // MISSION CONTROL</span></div>
-  <div class="hdr-right">
-    <div class="dot"></div>
-    <div class="clk" id="clk">--:--:--</div>
+<div id="app">
+
+<!-- ══════════════════ TITLEBAR ══════════════════ -->
+<div id="titlebar">
+  <div class="tb-logo">◈ MARCIO.SYS</div>
+  <div class="tb-divider"></div>
+  <div class="tb-status">
+    <span class="tb-led"></span>
+    <span>STUDY OS v5.0</span>
+    <span>·</span>
+    <div class="av stopped" id="avBars">
+      <div class="av-b"></div><div class="av-b"></div><div class="av-b"></div>
+      <div class="av-b"></div><div class="av-b"></div><div class="av-b"></div>
+    </div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-datetime">
+      <div class="tb-time" id="tbTime">--:--:--</div>
+      <div class="tb-date" id="tbDate">---</div>
+    </div>
+    <div class="win-controls">
+      <button class="wc wc-r" title="Fechar" onclick="window.close()"></button>
+      <button class="wc wc-y" title="Minimizar"></button>
+      <button class="wc wc-g" title="Fullscreen" onclick="toggleFS()"></button>
+    </div>
   </div>
 </div>
 
-<!-- TABS -->
-<div class="tabs">
-  <button class="tab active" onclick="switchTab('overview')">// OVERVIEW</button>
-  <button class="tab" onclick="switchTab('pomodoro')">// FOCO</button>
-  <button class="tab" onclick="switchTab('calendar')">// AGENDA</button>
-  <button class="tab" onclick="switchTab('github')">// GITHUB</button>
-</div>
+<!-- ══════════════════ SIDEBAR ══════════════════ -->
+<div id="sidebar">
 
-<!-- ===== OVERVIEW ===== -->
-<div class="panel active" id="panel-overview">
-  <div class="g3">
-    <div class="card">
-      <div class="lbl">XP TOTAL</div>
-      <div class="val">4.820</div>
-      <div class="sub">▲ +240 esta semana</div>
-    </div>
-    <div class="card o">
-      <div class="lbl">MISSÕES ATIVAS</div>
-      <div class="val o">07</div>
-      <div class="sub">3 com deadline próximo</div>
-    </div>
-    <div class="card p">
-      <div class="lbl">STREAK</div>
-      <div class="val p">12d</div>
-      <div class="sub">dias consecutivos</div>
-    </div>
-  </div>
-
-  <div class="stitle">// MISSÕES</div>
-  <div class="mission" onclick="window.open('https://web.dio.me','_blank')">
-    <div class="micon">☕</div>
-    <div class="mbody">
-      <div class="mtitle">Santander Bootcamp Java — DIO</div>
-      <div class="mmeta">Início: 25 Mai 2026 · Aprovação pendente</div>
-    </div>
-    <div class="badge bp">PENDENTE</div>
-  </div>
-  <div class="mission">
-    <div class="micon">🎓</div>
-    <div class="mbody">
-      <div class="mtitle">Eng. Software — Cruzeiro do Sul</div>
-      <div class="mmeta">Horas complementares · Deadline: Jun 2026</div>
-    </div>
-    <div class="badge ba">ATIVO</div>
-  </div>
-  <div class="mission">
-    <div class="micon">⚙</div>
-    <div class="mbody">
-      <div class="mtitle">Prototipagem Sistemas — DreamShaper</div>
-      <div class="mmeta">UML / Requisitos de sistemas</div>
-    </div>
-    <div class="badge ba">ATIVO</div>
-  </div>
-  <div class="mission done">
-    <div class="micon">🐍</div>
-    <div class="mbody">
-      <div class="mtitle">Google IT Automation Python — Coursera</div>
-      <div class="mmeta">7/7 cursos · 89.37% média · via CIEE</div>
-    </div>
-    <div class="badge bd">CONCLUÍDO</div>
-  </div>
-
-  <br>
-  <div class="stitle">// HABILIDADES</div>
-  <div class="pb-wrap">
-    <div class="pb-row"><span>Python</span><span style="color:var(--c)">88%</span></div>
-    <div class="pb"><div class="pbf c" style="width:0" data-width="88%"></div></div>
-  </div>
-  <div class="pb-wrap">
-    <div class="pb-row"><span>Git & GitHub</span><span style="color:var(--c)">82%</span></div>
-    <div class="pb"><div class="pbf c" style="width:0" data-width="82%"></div></div>
-  </div>
-  <div class="pb-wrap">
-    <div class="pb-row"><span>Linux / Bash</span><span style="color:var(--c)">60%</span></div>
-    <div class="pb"><div class="pbf c" style="width:0" data-width="60%"></div></div>
-  </div>
-  <div class="pb-wrap">
-    <div class="pb-row"><span>HTML / CSS / JS</span><span style="color:var(--c)">70%</span></div>
-    <div class="pb"><div class="pbf c" style="width:0" data-width="70%"></div></div>
-  </div>
-  <div class="pb-wrap">
-    <div class="pb-row"><span>Java</span><span style="color:var(--c2)">5%</span></div>
-    <div class="pb"><div class="pbf o" style="width:0" data-width="5%"></div></div>
-  </div>
-  <div class="pb-wrap">
-    <div class="pb-row"><span>Eng. Software / UML</span><span style="color:var(--c3)">45%</span></div>
-    <div class="pb"><div class="pbf p" style="width:0" data-width="45%"></div></div>
-  </div>
-
-  <br>
-  <div class="stitle">// LOG DO SISTEMA</div>
-  <div class="terminal">
-    <div><span class="tp">marcio@sys:~$ </span><span class="tc">status --all</span></div>
-    <div><span class="tok">[OK]</span><span class="tout"> Python Certificate — EMITIDO · 89.37%</span></div>
-    <div><span class="twarn">[WAIT]</span><span class="tout"> DIO Bootcamp Java — aguardando aprovação (35k vagas)</span></div>
-    <div><span class="twarn">[!]</span><span class="tout"> Horas complementares — deadline Jun/2026</span></div>
-    <div><span class="tout">[INFO] CNC Bystronic Xpert Pro 150 — operação nominal</span></div>
-    <div><span class="tp">marcio@sys:~$ </span><span class="tc" id="cur">_</span></div>
-  </div>
-
-  <div class="xp-bar-full">
-    <div class="xp-top">
-      <div class="xp-lbl">NÍVEL 12 — DEV EM ASCENSÃO</div>
-      <div class="xp-v">4.820 / 7.800 XP</div>
-    </div>
-    <div class="xp-b"><div class="xp-f"></div></div>
-    <div class="xp-sub"><span>LVL 12</span><span>62% para LVL 13</span><span>LVL 13</span></div>
-  </div>
-</div>
-
-<!-- ===== POMODORO ===== -->
-<div class="panel" id="panel-pomodoro">
-  <div class="pomo-wrap">
-    <div class="pomo-mode-lbl" id="pomo-mode-lbl">MODO FOCO</div>
-    <div class="pomo-ring">
-      <svg class="pomo-svg" width="180" height="180" viewBox="0 0 180 180">
-        <circle class="pomo-track" cx="90" cy="90" r="78"/>
-        <circle class="pomo-prog" id="pomo-ring" cx="90" cy="90" r="78" stroke-dasharray="490" stroke-dashoffset="0"/>
+  <!-- TIMER -->
+  <div class="sb-timer">
+    <div class="sb-sec-lbl">▸ Pomodoro</div>
+    <div class="ring-wrap">
+      <svg class="ring-svg" viewBox="0 0 130 130">
+        <circle class="r-track" cx="65" cy="65" r="60"/>
+        <circle class="r-fill" id="rFill" cx="65" cy="65" r="60"/>
       </svg>
-      <div class="pomo-time" id="pomo-display">25:00</div>
+      <div class="ring-inner">
+        <div class="r-digits" id="rDigits">25:00</div>
+        <div class="r-mode-lbl" id="rLbl">● FOCO</div>
+      </div>
     </div>
-    <div class="pomo-sublbl" id="pomo-sublbl">Selecione uma tarefa e inicie</div>
-    <div class="pomo-sessions">
-      <div class="psess" id="s0"></div>
-      <div class="psess" id="s1"></div>
-      <div class="psess" id="s2"></div>
-      <div class="psess" id="s3"></div>
+    <div class="mode-row">
+      <button class="mpill active" onclick="setMode('focus',25)">25min</button>
+      <button class="mpill" onclick="setMode('short',5)">5min</button>
+      <button class="mpill" onclick="setMode('long',15)">15min</button>
     </div>
-    <div class="pomo-btns">
-      <button class="pbtn" onclick="pomoDur(25,'FOCO')">25m FOCO</button>
-      <button class="pbtn orange" onclick="pomoDur(5,'PAUSA CURTA')">5m PAUSA</button>
-      <button class="pbtn" onclick="pomoDur(15,'PAUSA LONGA')">15m LONGA</button>
+    <div class="t-btns">
+      <button class="t-main" id="tBtn" onclick="toggleTimer()">INICIAR</button>
+      <button class="t-rst" onclick="resetTimer()">RESET</button>
     </div>
-    <div class="pomo-btns">
-      <button class="pbtn" id="btn-start" onclick="pomoToggle()">[ INICIAR ]</button>
-      <button class="pbtn red" onclick="pomoReset()">[ RESET ]</button>
+    <div class="sess-row">
+      <span class="sess-lbl">SESSÕES</span>
+      <div class="sdots" id="sdots">
+        <div class="sdot"></div><div class="sdot"></div>
+        <div class="sdot"></div><div class="sdot"></div>
+      </div>
     </div>
-    <div class="stitle" style="margin-top:16px">// TAREFA ATUAL</div>
-    <div class="pomo-task-box" id="pomo-task">Nenhuma tarefa selecionada</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:10px">
-      <button class="pbtn" style="font-size:10px;padding:6px 12px" onclick="setTask('Santander Bootcamp Java')">☕ Java</button>
-      <button class="pbtn" style="font-size:10px;padding:6px 12px" onclick="setTask('Horas Complementares')">🎓 Faculdade</button>
-      <button class="pbtn" style="font-size:10px;padding:6px 12px" onclick="setTask('Prototipagem UML')">⚙ UML</button>
-      <button class="pbtn" style="font-size:10px;padding:6px 12px" onclick="setTask('Projeto pessoal')">💻 Projeto</button>
-    </div>
-    <div class="pomo-stats">
-      Sessões hoje: <span id="sess-count" style="color:var(--c);font-family:'Orbitron',sans-serif">0</span>
-      &nbsp;|&nbsp;
-      Foco total: <span id="focus-time" style="color:var(--c2);font-family:'Orbitron',sans-serif">0min</span>
-    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="sb-nav-lbl">▸ Navegação</div>
+  <div class="sb-nav" id="sbNav"></div>
+
+  <!-- PROGRESS -->
+  <div class="sb-prog">
+    <div class="sb-sec-lbl">▸ Progresso Geral</div>
+    <div id="sidebarProgress"></div>
   </div>
 </div>
 
-<!-- ===== CALENDAR ===== -->
-<div class="panel" id="panel-calendar">
-  <div class="cal-wrap">
-    <div class="cal-hdr">
-      <button class="cal-nav" onclick="calNav(-1)">◀</button>
-      <div class="cal-month" id="cal-month">MAI 2026</div>
-      <button class="cal-nav" onclick="calNav(1)">▶</button>
-    </div>
-    <div class="cal-days">
-      <div class="cal-dlbl">DOM</div><div class="cal-dlbl">SEG</div><div class="cal-dlbl">TER</div>
-      <div class="cal-dlbl">QUA</div><div class="cal-dlbl">QUI</div><div class="cal-dlbl">SEX</div><div class="cal-dlbl">SAB</div>
-    </div>
-    <div class="cal-cells" id="cal-cells"></div>
-  </div>
-  <div class="stitle">// PRÓXIMOS EVENTOS</div>
-  <div id="events-list"></div>
+<!-- ══════════════════ MAIN ══════════════════ -->
+<div id="main">
+  <div id="tabbar"></div>
+  <div id="content"></div>
 </div>
 
-<!-- ===== GITHUB ===== -->
-<div class="panel" id="panel-github">
-  <div class="gh-wrap">
-    <div class="gh-profile-row">
-      <div class="gh-avatar">M</div>
-      <div>
-        <div class="gh-name">MENDES40MARCIO</div>
-        <div class="gh-bio">Desenvolvedor em formação · CNC Programmer · Piraquara, PR, Brasil</div>
-      </div>
-    </div>
-    <div class="stats4">
-      <div class="stat-box"><div class="stat-val">12</div><div class="stat-lbl">REPOS</div></div>
-      <div class="stat-box"><div class="stat-val o">3</div><div class="stat-lbl">STARS</div></div>
-      <div class="stat-box"><div class="stat-val p">5</div><div class="stat-lbl">SEGUIDORES</div></div>
-      <div class="stat-box"><div class="stat-val v">8</div><div class="stat-lbl">SEGUINDO</div></div>
-    </div>
-  </div>
-
-  <div class="gh-wrap">
-    <div class="stitle">// LINGUAGENS</div>
-    <div class="lb-wrap">
-      <div class="lb-row"><span><span class="lang-dot" style="background:#3572A5"></span>Python</span><span style="color:var(--c)">55%</span></div>
-      <div class="lb"><div class="lb-fill" data-width="55%" style="width:0;background:#3572A5"></div></div>
-    </div>
-    <div class="lb-wrap">
-      <div class="lb-row"><span><span class="lang-dot" style="background:#e34c26"></span>HTML</span><span style="color:var(--c)">25%</span></div>
-      <div class="lb"><div class="lb-fill" data-width="25%" style="width:0;background:#e34c26"></div></div>
-    </div>
-    <div class="lb-wrap">
-      <div class="lb-row"><span><span class="lang-dot" style="background:#f1e05a"></span>JavaScript</span><span style="color:var(--c)">15%</span></div>
-      <div class="lb"><div class="lb-fill" data-width="15%" style="width:0;background:#f1e05a"></div></div>
-    </div>
-    <div class="lb-wrap">
-      <div class="lb-row"><span><span class="lang-dot" style="background:#b07219"></span>Java</span><span style="color:var(--c2)">5%</span></div>
-      <div class="lb"><div class="lb-fill" data-width="5%" style="width:0;background:#b07219"></div></div>
-    </div>
-  </div>
-
-  <div class="gh-wrap">
-    <div class="stitle">// REPOSITÓRIOS</div>
-    <div class="repo-item" onclick="window.open('https://github.com/mendes40marcio','_blank')">
-      <div class="repo-left">
-        <div class="repo-name">MARCIO.SYS-dashboard</div>
-        <div class="repo-desc">Dashboard pessoal cyberpunk com tracker de estudos</div>
-      </div>
-      <div class="repo-meta">
-        <div class="repo-lang"><span class="lang-dot" style="background:#e34c26"></span>HTML</div>
-        <span style="font-size:10px;color:rgba(0,245,212,0.35)">★ 1</span>
-      </div>
-    </div>
-    <div class="repo-item" onclick="window.open('https://github.com/mendes40marcio','_blank')">
-      <div class="repo-left">
-        <div class="repo-name">python-automation-scripts</div>
-        <div class="repo-desc">Scripts de automação — Google IT Automation Certificate</div>
-      </div>
-      <div class="repo-meta">
-        <div class="repo-lang"><span class="lang-dot" style="background:#3572A5"></span>Python</div>
-        <span style="font-size:10px;color:rgba(0,245,212,0.35)">★ 0</span>
-      </div>
-    </div>
-    <div class="repo-item" onclick="window.open('https://github.com/mendes40marcio','_blank')">
-      <div class="repo-left">
-        <div class="repo-name">santander-java-bootcamp</div>
-        <div class="repo-desc">Projetos do Santander Bootcamp Java — DIO 2026</div>
-      </div>
-      <div class="repo-meta">
-        <div class="repo-lang"><span class="lang-dot" style="background:#b07219"></span>Java</div>
-        <span style="font-size:10px;color:rgba(0,245,212,0.35)">★ 0</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="gh-wrap">
-    <div class="stitle">// MAPA DE CONTRIBUIÇÕES</div>
-    <div class="contrib-grid" id="contrib-grid"></div>
-    <div class="contrib-legend">
-      menos
-      <div class="cl" style="background:rgba(0,245,212,0.05)"></div>
-      <div class="cl" style="background:rgba(0,245,212,0.15)"></div>
-      <div class="cl" style="background:rgba(0,245,212,0.3)"></div>
-      <div class="cl" style="background:rgba(0,245,212,0.55)"></div>
-      <div class="cl" style="background:var(--c)"></div>
-      mais
-    </div>
-  </div>
-
-  <a href="https://github.com/mendes40marcio" target="_blank">
-    <button class="btn-add">[ ABRIR GITHUB PROFILE ] ↗</button>
-  </a>
 </div>
-
-<div class="footer">MARCIO.SYS v3.0 · mendes40marcio · Piraquara, PR · 2026</div>
-
-</div><!-- end .sys -->
+<div id="notif"></div>
 
 <script>
-// CLOCK
-function updateClock(){
-  const n=new Date();
-  document.getElementById('clk').textContent=
-    String(n.getHours()).padStart(2,'0')+':'+
-    String(n.getMinutes()).padStart(2,'0')+':'+
-    String(n.getSeconds()).padStart(2,'0')+' BRT';
-}
-setInterval(updateClock,1000);
-updateClock();
+'use strict';
 
-// CURSOR BLINK
-let cur=true;
-setInterval(()=>{
-  const e=document.getElementById('cur');
-  if(e){e.style.opacity=cur?'1':'0';cur=!cur;}
-},600);
+// ═════════════════════════════════════
+//  PERSISTENT STATE
+// ═════════════════════════════════════
+const DEFAULT_STATE = {
+  courseraC3: 100,          // C3 progress %
+  courseraC3name: 'Introduction to Git and GitHub',
+  courseraC3status: 'done', // done | active | next
+  courseraC3label: 'CONCLUÍDO',
+  courseraC3deadline: '',
+  courseraC3lesson: 'Course 3 concluído com nota 89.37%',
+  courseraC4: 100,
+  courseraC5: 100,
+  courseraC6: 100,
+  courseraC7: 100,
+  coursesCompleted: 7,      // TODOS os 7 cursos concluídos!
+  horasTotal: 226,          // 226h confirmadas no portal (atualizado v5)
+  horasNeeded: 170,
+  discAtivas: 3,
+  sidebarC3: 100,
+  sidebarHoras: 100,
+  sidebarDiscs: 70,
+  sidebarDIO: 0,
+  sidebarPosgrad: 10,
+};
 
-// ANIMATE BARS ON LOAD
-function animateBars(){
-  document.querySelectorAll('[data-width]').forEach(el=>{
-    setTimeout(()=>{el.style.width=el.dataset.width;},200);
-  });
+const STATE_VERSION = 'v5_09mai2026';
+function loadState() {
+  try {
+    const ver = localStorage.getItem('mSysStateVer');
+    if (ver !== STATE_VERSION) {
+      localStorage.removeItem('mSysState3');
+      localStorage.setItem('mSysStateVer', STATE_VERSION);
+      return Object.assign({}, DEFAULT_STATE);
+    }
+    const saved = localStorage.getItem('mSysState3');
+    return saved ? Object.assign({}, DEFAULT_STATE, JSON.parse(saved)) : Object.assign({}, DEFAULT_STATE);
+  } catch(e) { return Object.assign({}, DEFAULT_STATE); }
 }
-animateBars();
-
-// TABS
-function switchTab(id){
-  const ids=['overview','pomodoro','calendar','github'];
-  document.querySelectorAll('.tab').forEach((t,i)=>{
-    t.classList.toggle('active',ids[i]===id);
-  });
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panel-'+id).classList.add('active');
-  // re-animate bars when switching tabs
-  setTimeout(animateBars,100);
+function saveState() {
+  localStorage.setItem('mSysState3', JSON.stringify(ST));
+  rebuildSidebarProgress();
 }
 
-// POMODORO
-let pomoIv=null,pomoRunning=false,pomoTotal=25*60,pomoLeft=25*60;
-let pomoSess=0,pomoMin=0,pomoTask='Nenhuma tarefa selecionada';
-const POMO_CIRCUMFERENCE=490;
+let ST = loadState();
 
-function pomoDur(m,label){
-  if(pomoRunning)return;
-  pomoTotal=m*60;pomoLeft=m*60;
-  document.getElementById('pomo-mode-lbl').textContent='MODO '+label;
-  document.getElementById('pomo-ring').style.strokeDashoffset='0';
-  updatePomoDisplay();
-}
-function updatePomoDisplay(){
-  const m=Math.floor(pomoLeft/60),s=pomoLeft%60;
-  document.getElementById('pomo-display').textContent=
-    String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  const prog=1-(pomoLeft/pomoTotal);
-  document.getElementById('pomo-ring').style.strokeDashoffset=String(prog*POMO_CIRCUMFERENCE);
-}
-function pomoToggle(){
-  if(pomoRunning){
-    clearInterval(pomoIv);pomoRunning=false;
-    document.getElementById('btn-start').textContent='[ RETOMAR ]';
-  } else {
-    pomoRunning=true;
-    document.getElementById('btn-start').textContent='[ PAUSAR ]';
-    document.getElementById('pomo-sublbl').textContent='Focando: '+pomoTask;
-    pomoIv=setInterval(()=>{
-      if(pomoLeft>0){pomoLeft--;updatePomoDisplay();}
-      else{
-        clearInterval(pomoIv);pomoRunning=false;
-        document.getElementById('btn-start').textContent='[ INICIAR ]';
-        document.getElementById('pomo-sublbl').textContent='Sessão concluída! Descanse.';
-        if(pomoTotal===25*60){
-          pomoSess++;pomoMin+=25;
-          document.getElementById('sess-count').textContent=pomoSess;
-          document.getElementById('focus-time').textContent=pomoMin+'min';
-          if(pomoSess<=4)document.getElementById('s'+(pomoSess-1)).classList.add('done');
-        }
+// ─ Make a value editable on click ─
+// el: the DOM element; key: STATE key; suffix: '%' or 'h' etc;
+// isText: if true, it's a string not a number; onSave: callback
+function makeEditable(el, key, suffix='', isText=false, onSave=null) {
+  el.classList.add('editable-val');
+  el.title = 'Clique para editar';
+  el.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (el.querySelector('.edit-input-wrap')) return;
+    const cur = ST[key];
+    const orig = el.innerHTML;
+    el.innerHTML = `<span class="edit-input-wrap">
+      <input class="edit-input" type="${isText?'text':'number'}" value="${cur}" style="width:${isText?'160px':'60px'}">
+      <span class="edit-ok">✓</span>
+    </span>`;
+    const inp = el.querySelector('.edit-input');
+    inp.focus(); inp.select();
+    function commit() {
+      const val = isText ? inp.value.trim() : parseFloat(inp.value);
+      if (isText ? val : !isNaN(val)) {
+        ST[key] = isText ? val : (suffix==='%' ? Math.min(100,Math.max(0,val)) : val);
+        saveState();
+        notify('💾 SALVO: ' + key, 'ok');
+        if (onSave) onSave(ST[key]);
+        else switchView(activeView); // re-render current view
+      } else {
+        el.innerHTML = orig;
       }
+    }
+    inp.addEventListener('keydown', function(ev) {
+      if (ev.key === 'Enter') commit();
+      if (ev.key === 'Escape') el.innerHTML = orig;
+    });
+    inp.addEventListener('blur', function() {
+      setTimeout(() => { if(el.querySelector('.edit-input')) el.innerHTML = orig; }, 200);
+    });
+    el.querySelector('.edit-ok').addEventListener('click', function(ev) {
+      ev.stopPropagation(); commit();
+    });
+  });
+}
+
+// ═════════════════════════════════════
+//  CLOCK
+// ═════════════════════════════════════
+const PT_DAYS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const PT_MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function tickClock(){
+  const n=new Date();
+  document.getElementById('tbTime').textContent=
+    `${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+  document.getElementById('tbDate').textContent=
+    `${PT_DAYS[n.getDay()]} ${n.getDate()} ${PT_MONTHS[n.getMonth()]} ${n.getFullYear()}`;
+}
+const p=n=>String(n).padStart(2,'0');
+setInterval(tickClock,1000); tickClock();
+function toggleFS(){
+  !document.fullscreenElement ? document.documentElement.requestFullscreen() : document.exitFullscreen();
+}
+
+// ═════════════════════════════════════
+//  TIMER
+// ═════════════════════════════════════
+const CIRC=2*Math.PI*60; // ≈376.99
+const rFill=document.getElementById('rFill');
+rFill.style.strokeDasharray=CIRC;
+rFill.style.strokeDashoffset=0;
+
+let tTotal=25*60,tRemain=25*60,tRunning=false,tInterval=null,tMode='focus';
+let sessions=parseInt(localStorage.getItem('mSess2')||'0');
+
+function drawTimer(){
+  document.getElementById('rDigits').textContent=`${p(Math.floor(tRemain/60))}:${p(tRemain%60)}`;
+  rFill.style.strokeDashoffset=CIRC*(1-tRemain/tTotal);
+  document.title=tRunning?`${p(Math.floor(tRemain/60))}:${p(tRemain%60)} — MARCIO.SYS`:'MARCIO.SYS — Study OS';
+}
+
+function setMode(m,mins){
+  resetTimer(); tMode=m; tTotal=mins*60; tRemain=mins*60;
+  document.querySelectorAll('.mpill').forEach((b,i)=>b.classList.toggle('active',['focus','short','long'][i]===m));
+  const lbls={focus:'● FOCO',short:'◌ PAUSA',long:'◌ LONGA'};
+  const cols={focus:'var(--cyan)',short:'var(--green)',long:'var(--yellow)'};
+  document.getElementById('rLbl').textContent=lbls[m];
+  rFill.style.stroke=cols[m];
+  rFill.style.filter=`drop-shadow(0 0 8px ${cols[m]})`;
+  drawTimer();
+}
+
+function toggleTimer(){
+  if(tRunning){
+    clearInterval(tInterval);tRunning=false;
+    document.getElementById('tBtn').textContent='RETOMAR';
+    document.getElementById('avBars').classList.add('stopped');
+  } else {
+    tRunning=true;
+    document.getElementById('tBtn').textContent='PAUSAR';
+    document.getElementById('avBars').classList.remove('stopped');
+    tInterval=setInterval(()=>{
+      if(tRemain<=0){
+        clearInterval(tInterval);tRunning=false;
+        document.getElementById('tBtn').textContent='INICIAR';
+        document.getElementById('avBars').classList.add('stopped');
+        if(tMode==='focus'){
+          sessions=Math.min(sessions+1,4);
+          localStorage.setItem('mSess2',sessions);
+          updateDots();
+          notify('🔥 SESSÃO CONCLUÍDA! DESCANSE.','ok');
+          if(sessions===4)setTimeout(()=>notify('⚡ 4 POMODOROS! PAUSA LONGA RECOMENDADA','warn'),3500);
+        } else {
+          notify('⚡ PAUSA ENCERRADA — FOCO MÁXIMO!');
+        }
+        return;
+      }
+      tRemain--; drawTimer();
     },1000);
   }
 }
-function pomoReset(){
-  clearInterval(pomoIv);pomoRunning=false;pomoLeft=pomoTotal;
-  document.getElementById('btn-start').textContent='[ INICIAR ]';
-  document.getElementById('pomo-sublbl').textContent='Selecione uma tarefa e inicie';
-  document.getElementById('pomo-ring').style.strokeDashoffset='0';
-  updatePomoDisplay();
-}
-function setTask(t){
-  pomoTask=t;
-  document.getElementById('pomo-task').textContent=t;
-  document.getElementById('pomo-sublbl').textContent='Pronto para focar em: '+t;
-}
-updatePomoDisplay();
 
-// CALENDAR
-const CAL_EVENTS=[
-  {date:'2026-05-25',title:'Início Bootcamp Java DIO',color:'#ff6b35'},
-  {date:'2026-05-10',title:'Entrega Prototipagem UML',color:'#00f5d4'},
-  {date:'2026-05-30',title:'Revisão horas complementares',color:'#00f5d4'},
-  {date:'2026-06-15',title:'Deadline horas complementares',color:'#f72585'},
-  {date:'2026-06-25',title:'Entrega final — Cruzeiro do Sul',color:'#f72585'},
+function resetTimer(){
+  clearInterval(tInterval);tRunning=false;tRemain=tTotal;
+  document.getElementById('tBtn').textContent='INICIAR';
+  document.getElementById('avBars').classList.add('stopped');
+  drawTimer();
+}
+
+function updateDots(){
+  document.querySelectorAll('.sdot').forEach((d,i)=>d.classList.toggle('lit',i<sessions));
+}
+
+// Reset diário
+const today=new Date().toDateString();
+if(localStorage.getItem('mSessDate2')!==today){
+  localStorage.setItem('mSessDate2',today);
+  localStorage.setItem('mSess2','0');
+  sessions=0;
+}
+updateDots(); drawTimer();
+
+// ═════════════════════════════════════
+//  NOTIFICATION
+// ═════════════════════════════════════
+function notify(msg,type=''){
+  const n=document.getElementById('notif');
+  n.textContent=msg; n.className=type?`show ${type}`:'show';
+  setTimeout(()=>n.className='',4000);
+}
+
+// ═════════════════════════════════════
+//  SIDEBAR PROGRESS (dynamic)
+// ═════════════════════════════════════
+function rebuildSidebarProgress() {
+  const horaspct = Math.min(100, Math.round(ST.horasTotal / ST.horasNeeded * 100));
+  const items = [
+    {label: 'Coursera — 7/7 ✓ CERT.', val: '100%', fill: 100, cls:'pc'},
+    {label: 'Horas Complementares', val: horaspct+'%', fill: horaspct, cls:'po'},
+    {label: 'Disciplinas EAD', val: ST.sidebarDiscs+'%', fill: ST.sidebarDiscs, cls:'pp'},
+    {label: 'DIO Back-End', val: ST.sidebarDIO+'%', fill: ST.sidebarDIO, cls:'pg'},
+    {label: 'Pós-grad. EAD', val: ST.sidebarPosgrad+'%', fill: ST.sidebarPosgrad, cls:'py'},
+  ];
+  const el = document.getElementById('sidebarProgress');
+  if (!el) return;
+  el.innerHTML = items.map(it=>`
+    <div class="prog-item">
+      <div class="prog-row"><span>${it.label}</span><span>${it.val}</span></div>
+      <div class="pbar"><div class="pfill ${it.cls}" style="width:${it.fill}%"></div></div>
+    </div>
+  `).join('');
+}
+
+// ═════════════════════════════════════
+//  VIEWS DATA
+// ═════════════════════════════════════
+const VIEWS = [
+  // ─ 0: DASHBOARD ─
+  {
+    id:'dash', navIcon:'⚡', navTitle:'Dashboard', navSub:'Visão Geral',
+    tabLabel:'◈ Dashboard', tabDot:'',
+    render:()=>renderDashboard()
+  },
+  // ─ 1: COURSERA ─
+  {
+    id:'coursera', navIcon:'🏆', navTitle:'Google IT Auto', navSub:'Coursera · 7/7 CONCLUÍDOS · CERTIFICADO',
+    badge:'COMPLETO', badgeCls:'badge-done',
+    tabLabel:'🏆 Coursera', tabDot:'',
+    render:()=>renderCoursera()
+  },
+  // ─ 2: HORAS COMPLEMENTARES ─
+  {
+    id:'horas', navIcon:'📋', navTitle:'Horas Compl.', navSub:'226h / 170h · 133% ✓',
+    badge:'100%', badgeCls:'badge-done',
+    tabLabel:'📋 Horas Compl.', tabDot:'orange',
+    render:()=>renderHoras()
+  },
+  // ─ 3: DISCIPLINAS ─
+  {
+    id:'discs', navIcon:'🎓', navTitle:'Disciplinas EAD', navSub:'Cruzeiro do Sul Virtual',
+    badge:'', badgeCls:'',
+    tabLabel:'🎓 Disciplinas', tabDot:'',
+    render:()=>renderDiscs()
+  },
+  // ─ 4: GIT & GITHUB ─
+  {
+    id:'git', navIcon:'🌿', navTitle:'Git & GitHub', navSub:'Course 3 · 100% · Concluído ✓',
+    badge:'CONCLUÍDO', badgeCls:'badge-done',
+    tabLabel:'🌿 Git/GitHub', tabDot:'',
+    render:()=>renderStudy('git')
+  },
+  // ─ 5: DEBUG ─
+  {
+    id:'debug', navIcon:'🐛', navTitle:'Troubleshooting', navSub:'Course 4 · 100% · Concluído ✓',
+    badge:'CONCLUÍDO', badgeCls:'badge-done',
+    tabLabel:'🐛 Debug', tabDot:'',
+    render:()=>renderStudy('debug')
+  },
+  // ─ 6: AGENTES IA ─
+  {
+    id:'ia', navIcon:'🤖', navTitle:'Agentes de IA', navSub:'Faculdade · Concluída · Nota 9.5',
+    badge:'CONCLUÍDO', badgeCls:'badge-done',
+    tabLabel:'🤖 Agentes IA', tabDot:'',
+    render:()=>renderStudy('ia')
+  },
+  // ─ 7: BACK-END ─
+  {
+    id:'backend', navIcon:'🐍', navTitle:'Python Back-End', navSub:'DIO Luizalabs · Pós-junho',
+    badge:'EM BREVE', badgeCls:'badge-next',
+    tabLabel:'🐍 Back-End', tabDot:'purple',
+    render:()=>renderStudy('backend')
+  },
 ];
-let calDate=new Date(2026,4,1);
-const MONTHS=['JAN','FEV','MAR','ABR','MAI','JUN','JUL','AGO','SET','OUT','NOV','DEZ'];
 
-function renderCal(){
-  const y=calDate.getFullYear(),m=calDate.getMonth();
-  document.getElementById('cal-month').textContent=MONTHS[m]+' '+y;
-  const first=new Date(y,m,1).getDay();
-  const days=new Date(y,m+1,0).getDate();
-  const today=new Date();
-  let html='';
-  for(let i=0;i<first;i++)html+='<div class="cal-cell empty"></div>';
-  for(let d=1;d<=days;d++){
-    const ds=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const ev=CAL_EVENTS.find(e=>e.date===ds);
-    const isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
-    let cls='cal-cell';
-    if(isToday)cls+=' today';
-    if(ev)cls+=ev.color==='#f72585'?' deadline':' has-ev';
-    html+=`<div class="${cls}" title="${ev?ev.title:''}" onclick="calClick('${ds}')">${d}</div>`;
-  }
-  document.getElementById('cal-cells').innerHTML=html;
-  renderEvents(y,m);
-}
-function renderEvents(y,m){
-  const filtered=CAL_EVENTS
-    .filter(e=>{const d=new Date(e.date);return d.getFullYear()===y&&d.getMonth()===m;})
-    .sort((a,b)=>new Date(a.date)-new Date(b.date));
-  document.getElementById('events-list').innerHTML=filtered.length
-    ?filtered.map(ev=>{
-        const d=new Date(ev.date);
-        const dd=String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0');
-        return `<div class="ev-item">
-          <div class="ev-dot" style="background:${ev.color}"></div>
-          <div class="ev-date">${dd}</div>
-          <div style="font-size:11px;color:var(--c)">${ev.title}</div>
-        </div>`;
-      }).join('')
-    :'<div style="font-size:11px;color:rgba(0,245,212,0.3);padding:10px 0">Nenhum evento neste mês</div>';
-}
-function calNav(dir){
-  calDate=new Date(calDate.getFullYear(),calDate.getMonth()+dir,1);
-  renderCal();
-}
-function calClick(ds){
-  const ev=CAL_EVENTS.find(e=>e.date===ds);
-  if(ev)alert('Evento: '+ev.title+'\nData: '+ds);
-}
-renderCal();
+// ═════════════════════════════════════
+//  NAV + TAB RENDER
+// ═════════════════════════════════════
+let activeView=0;
 
-// CONTRIB GRID
-(function(){
-  let html='';
-  for(let i=0;i<364;i++){
-    const r=Math.random();
-    let l='';
-    if(r>0.88)l='l4';
-    else if(r>0.74)l='l3';
-    else if(r>0.55)l='l2';
-    else if(r>0.35)l='l1';
-    html+=`<div class="cc ${l}"></div>`;
+function buildNav(){
+  document.getElementById('sbNav').innerHTML=VIEWS.map((v,i)=>`
+    <div class="nav-item${i===activeView?' active':''}" onclick="switchView(${i})">
+      <span class="ni-icon">${v.navIcon}</span>
+      <div class="ni-info">
+        <div class="ni-title">${v.navTitle}</div>
+        <div class="ni-sub">${v.navSub}</div>
+      </div>
+      ${v.badge?`<span class="ni-badge ${v.badgeCls}">${v.badge}</span>`:''}
+    </div>
+  `).join('');
+}
+
+function buildTabs(){
+  document.getElementById('tabbar').innerHTML=VIEWS.map((v,i)=>`
+    <button class="tab-btn${i===activeView?' active':''}" onclick="switchView(${i})">
+      ${v.tabDot?`<span class="tab-dot ${v.tabDot}"></span>`:''}
+      ${v.tabLabel}
+    </button>
+  `).join('');
+}
+
+function switchView(i){
+  activeView=i;
+  buildNav(); buildTabs();
+  VIEWS[i].render();
+}
+
+// ═════════════════════════════════════
+//  RENDER: DASHBOARD
+// ═════════════════════════════════════
+function renderDashboard(){
+  const el=document.getElementById('content');
+  const horaspct = (ST.horasTotal/ST.horasNeeded*100).toFixed(1);
+  el.innerHTML=`
+    <div class="view-title">
+      <span class="vt-tag">OVERVIEW</span>
+      <div>
+        <div class="vt-h">◈ MARCIO.SYS — Central de Estudos</div>
+        <div class="vt-sub">Engenharia de Software · Cruzeiro do Sul Virtual · Google IT Automation</div>
+      </div>
+    </div>
+
+    <div class="dash-grid">
+      <div class="stat-card sc-cyan">
+        <div class="sc-icon">🏆</div>
+        <div class="sc-label">COURSERA · CERTIFICADO PROFISSIONAL</div>
+        <div class="sc-value" style="color:var(--cyan)">7/7</div>
+        <div class="sc-sub">Google IT Automation with Python — COMPLETO!</div>
+        <div class="sc-bar"><div class="sc-bar-fill" style="width:100%;background:var(--cyan)"></div></div>
+      </div>
+      <div class="stat-card sc-orange">
+        <div class="sc-icon">✅</div>
+        <div class="sc-label">HORAS COMPLEMENTARES</div>
+        <div class="sc-value" style="color:var(--green)" id="dash-horas">${ST.horasTotal}<span style="font-size:14px">h</span></div>
+        <div class="sc-sub">de ${ST.horasNeeded}h · META SUPERADA! +${ST.horasTotal - ST.horasNeeded}h excedente</div>
+        <div class="sc-bar"><div class="sc-bar-fill" style="width:100%;background:var(--green)"></div></div>
+      </div>
+      <div class="stat-card sc-green">
+        <div class="sc-icon">🎓</div>
+        <div class="sc-label">CURSOS CONCLUÍDOS</div>
+        <div class="sc-value" style="color:var(--green)" id="dash-completed">${ST.coursesCompleted}</div>
+        <div class="sc-sub">C1 · C2 · C3 · C4 · C5 · C6 · C7 — todos completos!</div>
+        <div class="sc-bar"><div class="sc-bar-fill" style="width:100%;background:var(--green)"></div></div>
+      </div>
+      <div class="stat-card sc-purple">
+        <div class="sc-icon">🎓</div>
+        <div class="sc-label">DISCIPLINAS EAD ATIVAS</div>
+        <div class="sc-value" style="color:var(--purple)" id="dash-discs">${ST.discAtivas}</div>
+        <div class="sc-sub">Programação · Prototipagem · Prompt IA</div>
+        <div class="sc-bar"><div class="sc-bar-fill" style="width:${ST.sidebarDiscs}%;background:var(--purple)"></div></div>
+      </div>
+      <div class="stat-card sc-yellow">
+        <div class="sc-icon">🚀</div>
+        <div class="sc-label">PRÓXIMO PASSO</div>
+        <div class="sc-value" style="color:var(--yellow);font-size:14px">DIO</div>
+        <div class="sc-sub">Python Back-End · Luizalabs · Pós-Junho</div>
+        <div class="sc-bar"><div class="sc-bar-fill" style="width:${ST.sidebarDIO}%;background:var(--yellow)"></div></div>
+      </div>
+      <div class="stat-card sc-green">
+        <div class="sc-icon">📜</div>
+        <div class="sc-label">CERTIFICADO PROFISSIONAL</div>
+        <div class="sc-value" style="color:var(--green);font-size:16px">Google</div>
+        <div class="sc-sub">IT Automation with Python · Emitido 29/04/2026</div>
+        <div class="sc-bar"><div class="sc-bar-fill" style="width:100%;background:var(--green)"></div></div>
+      </div>
+      <div class="stat-card sc-cyan">
+        <div class="sc-icon">🤖</div>
+        <div class="sc-label">CERTIFICADO PROFISSIONAL · NOVO</div>
+        <div class="sc-value" style="color:var(--cyan);font-size:16px">Google AI</div>
+        <div class="sc-sub">7 cursos · Vibe Coding · Gemini · Emitido 09/05/2026</div>
+        <div class="sc-bar"><div class="sc-bar-fill" style="width:100%;background:var(--cyan)"></div></div>
+      </div>
+      <div class="stat-card sc-yellow">
+        <div class="sc-icon">🏅</div>
+        <div class="sc-label">CERTIFICADOS GOOGLE</div>
+        <div class="sc-value" style="color:var(--yellow)">2<span style="font-size:14px">/2</span></div>
+        <div class="sc-sub">IT Automation + AI · Dobradinha completa!</div>
+        <div class="sc-bar"><div class="sc-bar-fill" style="width:100%;background:var(--yellow)"></div></div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div class="panel-box">
+        <div class="panel-title">▸ CONQUISTA — COURSERA COMPLETO</div>
+        <div style="padding:6px 0;border-bottom:1px solid var(--border2)">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--green);margin-bottom:3px">🏆 CERTIFICADO PROFISSIONAL EMITIDO</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text)">Google IT Automation with Python</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text2);margin-top:3px">7 de 7 cursos · 100% · CIEE + Google</div>
+        </div>
+        <div style="padding:8px 0">
+          <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--cyan);margin-bottom:4px">PRÓXIMO PASSO</div>
+          <div style="font-size:12px;color:var(--text)">DIO Luizalabs — Python Back-End</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text2);margin-top:2px">🚀 APIs · FastAPI · PostgreSQL · Docker · Pós-Junho</div>
+        </div>
+        <button class="cc-action done-btn" style="margin-top:6px;width:100%;text-align:center"
+          onclick="notify('🏆 Certificado disponível na Coursera!','ok')">
+          📜 VER CERTIFICADO
+        </button>
+      </div>
+
+      <div class="panel-box">
+        <div class="panel-title">▸ SEQUÊNCIA COMPLETA</div>
+        ${[
+          {icon:'✅',text:'C1 · Crash Course on Python',sub:'Concluído · Certificado emitido',c:'var(--green)'},
+          {icon:'✅',text:'C2 · Python OS Interaction',sub:'Concluído · Certificado emitido',c:'var(--green)'},
+          {icon:'✅',text:'C3 · Git & GitHub — 89.37%',sub:'Concluído em 12/04/2026',c:'var(--green)'},
+          {icon:'✅',text:'C4 · Troubleshooting & Debug',sub:'Concluído · 100%',c:'var(--green)'},
+          {icon:'✅',text:'C5 · Config Mgmt & Cloud',sub:'Concluído · 100%',c:'var(--green)'},
+          {icon:'✅',text:'C6 · Real-World Tasks Python',sub:'Concluído · 100%',c:'var(--green)'},
+          {icon:'✅',text:'C7 · Accelerate Job Search AI',sub:'Concluído · 100%',c:'var(--green)'},
+        ].map(r=>`
+          <div style="display:flex;gap:8px;padding:5px 0;border-bottom:1px solid var(--border2);align-items:center">
+            <span style="font-size:14px">${r.icon}</span>
+            <div>
+              <div style="font-size:11px;font-weight:600;color:${r.c}">${r.text}</div>
+              <div style="font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--text2)">${r.sub}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+
+    <div class="panel-box">
+      <div class="panel-title">▸ AÇÕES RÁPIDAS</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${[
+          {label:'📜 Ver Certificado',color:'green',fn:"window.open('https://www.coursera.org','_blank');notify('🏆 Certificado Google IT Automation!')"},
+          {label:'📋 Ver Horas Comp.',color:'orange',fn:"switchView(2)"},
+          {label:'🎓 Disciplinas EAD',color:'purple',fn:"switchView(3)"},
+          {label:'🐍 Roadmap Back-End',color:'yellow',fn:"switchView(7)"},
+          {label:'📊 Painel Coursera',color:'cyan',fn:"switchView(1)"},
+          {label:'🔗 LinkedIn',color:'cyan',fn:"window.open('https://www.linkedin.com','_blank');notify('Abrindo LinkedIn...')"},
+        ].map(b=>`
+          <button onclick="${b.fn}" style="
+            font-family:'Share Tech Mono',monospace;font-size:9px;
+            padding:8px 14px;border:1px solid var(--${b.color});
+            color:var(--${b.color});background:rgba(0,0,0,.3);
+            cursor:pointer;letter-spacing:1px;transition:.2s;
+          " onmouseover="this.style.background='rgba(0,0,0,.6)'"
+             onmouseout="this.style.background='rgba(0,0,0,.3)'">${b.label}</button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  // Make values editable
+  makeEditable(document.getElementById('dash-horas'), 'horasTotal', 'h');
+  makeEditable(document.getElementById('dash-completed'), 'coursesCompleted', '');
+  makeEditable(document.getElementById('dash-discs'), 'discAtivas', '');
+}
+
+// ═════════════════════════════════════
+//  RENDER: COURSERA
+// ═════════════════════════════════════
+function renderCoursera(){
+  const el=document.getElementById('content');
+  const courses=[
+    {
+      num:'C1',status:'done',icon:'✅',cls:'cc-done',
+      title:'Crash Course on Python',
+      sub:'Curso 1 de 7 · Concluído · Google + CIEE',
+      prog:100,progColor:'var(--green)',
+      badge:'CONCLUÍDO',badgeStyle:'background:var(--green);color:#000',
+      btns:[
+        {label:'LinkedIn',cls:'linked',fn:"window.open('https://www.linkedin.com','_blank')"},
+        {label:'Certificado',cls:'done-btn',fn:"notify('📜 Abrindo certificado...','ok')"}
+      ],
+      deadline:null,
+    },
+    {
+      num:'C2',status:'done',icon:'✅',cls:'cc-done',
+      title:'Using Python to Interact with the Operating System',
+      sub:'Curso 2 de 7 · Concluído · Google + CIEE',
+      prog:100,progColor:'var(--green)',
+      badge:'CONCLUÍDO',badgeStyle:'background:var(--green);color:#000',
+      btns:[
+        {label:'LinkedIn',cls:'linked',fn:"window.open('https://www.linkedin.com','_blank')"},
+        {label:'Certificado',cls:'done-btn',fn:"notify('📜 Abrindo certificado...','ok')"}
+      ],
+      deadline:null,
+    },
+    {
+      num:'C3',status:'done',icon:'✅',cls:'cc-done',
+      title:'Introduction to Git and GitHub',
+      sub:'Curso 3 de 7 · 100% completo · CIEE + Google',
+      prog:100,progColor:'var(--green)',
+      badge:'CONCLUÍDO',badgeStyle:'background:var(--green);color:#000',
+      btns:[
+        {label:'LinkedIn',cls:'linked',fn:"window.open('https://www.linkedin.com','_blank')"},
+        {label:'Certificado',cls:'done-btn',fn:"notify('📜 Nota: 89.37%','ok')"}
+      ],
+      deadline:null,
+      currentLesson:'Concluído em 12/04/2026 · Nota: 89.37%',
+    },
+    {
+      num:'C4',status:'done',icon:'✅',cls:'cc-done',
+      title:'Troubleshooting and Debugging Techniques',
+      sub:'Curso 4 de 7 · 100% completo · Concluído',
+      prog:100,progColor:'var(--green)',
+      badge:'CONCLUÍDO',badgeStyle:'background:var(--green);color:#000',
+      btns:[
+        {label:'LinkedIn',cls:'linked',fn:"window.open('https://www.linkedin.com','_blank')"},
+        {label:'Certificado',cls:'done-btn',fn:"notify('📜 C4 Concluído!','ok')"}
+      ],
+      deadline:null,
+      currentLesson:'Concluído · 100%',
+    },
+    {
+      num:'C5',status:'done',icon:'✅',cls:'cc-done',
+      title:'Configuration Management and the Cloud',
+      sub:'Curso 5 de 7 · 100% completo · Concluído',
+      prog:100,progColor:'var(--green)',
+      badge:'CONCLUÍDO',badgeStyle:'background:var(--green);color:#000',
+      btns:[
+        {label:'LinkedIn',cls:'linked',fn:"window.open('https://www.linkedin.com','_blank')"},
+        {label:'Certificado',cls:'done-btn',fn:"notify('📜 C5 Concluído!','ok')"}
+      ],
+      deadline:null,
+      currentLesson:'Concluído · 100%',
+    },
+    {
+      num:'C6',status:'done',icon:'✅',cls:'cc-done',
+      title:'Automating Real-World Tasks with Python',
+      sub:'Curso 6 de 7 · 100% completo · Concluído',
+      prog:100,progColor:'var(--green)',
+      badge:'CONCLUÍDO',badgeStyle:'background:var(--green);color:#000',
+      btns:[
+        {label:'LinkedIn',cls:'linked',fn:"window.open('https://www.linkedin.com','_blank')"},
+        {label:'Certificado',cls:'done-btn',fn:"notify('📜 C6 Concluído!','ok')"}
+      ],
+      deadline:null,
+      currentLesson:'Concluído · 100%',
+    },
+    {
+      num:'C7',status:'done',icon:'✅',cls:'cc-done',
+      title:'Accelerate Your Job Search with AI',
+      sub:'Curso 7 de 7 · 100% completo · Concluído',
+      prog:100,progColor:'var(--green)',
+      badge:'CONCLUÍDO',badgeStyle:'background:var(--green);color:#000',
+      btns:[
+        {label:'LinkedIn',cls:'linked',fn:"window.open('https://www.linkedin.com','_blank')"},
+        {label:'Certificado',cls:'done-btn',fn:"notify('📜 C7 Concluído!','ok')"}
+      ],
+      deadline:null,
+      currentLesson:'Concluído · 100%',
+    },
+  ];
+
+  el.innerHTML=`
+    <div class="view-title">
+      <span class="vt-tag">COURSERA · CIEE + GOOGLE</span>
+      <div>
+        <div class="vt-h">Google IT Automation with Python</div>
+        <div class="vt-sub">Professional Certificate · 7/7 Cursos Concluídos · 🏆 CERTIFICADO EMITIDO!</div>
+      </div>
+    </div>
+    <div class="alert-strip" style="margin-bottom:12px;border-left-color:var(--green);background:rgba(0,255,136,.05)">
+      🏆 PARABÉNS! Certificado Profissional Google IT Automation with Python emitido. Todos os 7 cursos concluídos com sucesso!
+      <button onclick="window.open('https://www.coursera.org','_blank');notify('Abrindo Coursera...','ok')" style="margin-left:12px;font-family:'Share Tech Mono',monospace;font-size:8px;padding:3px 10px;border:1px solid var(--green);color:var(--green);background:transparent;cursor:pointer">▶ VER CERTIFICADO</button>
+    </div>
+    <div class="course-list">
+      ${courses.map(c=>`
+        <div class="course-card ${c.cls}">
+          <div class="cc-num">${c.num}</div>
+          <div class="cc-status-icon">${c.icon}</div>
+          <div class="cc-info">
+            <div class="cc-title">${c.title}</div>
+            <div class="cc-sub">${c.sub}</div>
+            ${c.currentLesson?`<div class="cc-sub" style="color:${c.status==='done'?'var(--green)':'var(--orange)'};margin-top:3px">● ${c.currentLesson}</div>`:''}
+            <div class="cc-prog-bar" style="margin-top:8px">
+              <div class="cc-prog-fill ${c.editId?'editable-val':''}" id="${c.editId||''}" style="width:${c.prog}%;background:${c.progColor}" title="${c.editId?'Clique para editar':''}"></div>
+            </div>
+            <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:${c.progColor};margin-top:4px" ${c.editId?`id="${c.editId}-num"`:''}>${c.prog}%</div>
+            ${c.deadline?`<div class="cc-deadline">${c.deadline}</div>`:''}
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+            <span class="cc-badge" style="${c.badgeStyle}">${c.badge}</span>
+            ${c.btns.map(b=>`<button class="cc-action ${b.cls}" onclick="${b.fn}">${b.label}</button>`).join('')}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  // All courses done - no editable progress needed
+}
+
+// ═════════════════════════════════════
+//  RENDER: HORAS COMPLEMENTARES
+// ═════════════════════════════════════
+function renderHoras(){
+  const el=document.getElementById('content');
+  const items=[
+    {tipo:'Certificado Profissional Google',nome:'Google IT Automation with Python',ch:30,data:'28/04/2026',status:'wait'},
+    {tipo:'Cursos presenciais ou online',nome:'Felicidade e Qualidade de vida',ch:40,data:'14/04/2026',status:'ok'},
+    {tipo:'Disciplinas excedentes',nome:'Nivelamento de inteligência artificial',ch:40,data:'05/04/2026',status:'ok'},
+    {tipo:'Cursos online',nome:'Internacionalização do ensino superior EAD',ch:4,data:'01/04/2026',status:'ok'},
+    {tipo:'Palestras / Seminários',nome:'Másterclass',ch:2,data:'26/03/2026',status:'ok'},
+    {tipo:'Cursos online',nome:'Prompt Avançado em IA',ch:4,data:'22/03/2026',status:'no'},
+    {tipo:'Cursos online',nome:'Simplifica inteligência artificial express',ch:8,data:'17/03/2026',status:'no'},
+  ];
+  const total=ST.horasTotal, needed=ST.horasNeeded, pct=Math.min(100,(total/needed*100)).toFixed(1);
+  const approved=items.filter(i=>i.status==='ok').reduce((a,b)=>a+b.ch,0);
+  const rejected=items.filter(i=>i.status==='no').reduce((a,b)=>a+b.ch,0);
+  const waiting=items.filter(i=>i.status==='wait').reduce((a,b)=>a+b.ch,0);
+  const surplus=Math.max(0,total-needed);
+
+  el.innerHTML=`
+    <div class="view-title">
+      <span class="vt-tag">CRUZEIRO DO SUL</span>
+      <div>
+        <div class="vt-h">Atividades Complementares</div>
+        <div class="vt-sub">Temas Transversais · 226h / 170h · ✅ META SUPERADA! +${surplus}h excedente</div>
+      </div>
+    </div>
+
+    <div class="horas-header">
+      <div class="horas-row" style="margin-bottom:10px">
+        <div class="horas-stat">
+          <div class="horas-num" style="color:var(--green)" id="horas-total">${total}<span style="font-size:14px">h</span></div>
+          <div class="horas-sub">CUMPRIDAS</div>
+        </div>
+        <div style="flex:1;padding:0 16px">
+          <div style="display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text2);margin-bottom:6px">
+            <span>Atividades Complementares</span><span>${pct}%</span>
+          </div>
+          <div class="horas-big-bar">
+            <div class="horas-big-fill" style="width:${pct}%;background:linear-gradient(90deg,var(--cyan),var(--green))"></div>
+          </div>
+        </div>
+        <div class="horas-stat">
+          <div class="horas-num" style="color:var(--green)">+${surplus}<span style="font-size:14px">h</span></div>
+          <div class="horas-sub">EXCEDENTE</div>
+        </div>
+        <div class="horas-stat">
+          <div class="horas-num" style="color:var(--text2)">${needed}<span style="font-size:14px">h</span></div>
+          <div class="horas-sub">EXIGIDO</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <span class="status-pill sp-ok">✓ ${approved}h Aprovadas</span>
+        <span class="status-pill sp-wait">⏳ ${waiting}h Em Análise</span>
+        <span class="status-pill sp-no">✗ ${rejected}h Reprovadas</span>
+        <button onclick="notify('🌐 Abrindo portal Cruzeiro do Sul...'); setTimeout(()=>window.open('https://novoportal.cruzeirodoSul.edu.br/gfa/atividade-complementar','_blank'),500)"
+          style="font-family:'Share Tech Mono',monospace;font-size:9px;padding:4px 12px;border:1px solid var(--cyan);color:var(--cyan);background:transparent;cursor:pointer;letter-spacing:1px;margin-left:auto">
+          ▶ ACESSAR PORTAL
+        </button>
+      </div>
+    </div>
+
+    <div class="comp-table">
+      <div class="comp-table-head">
+        <div class="cth">Tipo</div>
+        <div class="cth">Nome do Evento</div>
+        <div class="cth">Carga H.</div>
+        <div class="cth">Data Envio</div>
+        <div class="cth">Status</div>
+        <div class="cth">Ações</div>
+      </div>
+      ${items.map((it,i)=>`
+        <div class="comp-row" style="animation-delay:${i*.05}s;animation:fadeSlide .4s ease both">
+          <div class="crd">${it.tipo}<span class="crd-sub"></span></div>
+          <div class="crd" style="font-weight:600">${it.nome}</div>
+          <div class="ch-num" style="color:${it.status==='ok'?'var(--green)':it.status==='wait'?'var(--yellow)':'var(--red)'}">${it.ch}h</div>
+          <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--text2)">${it.data}</div>
+          <div>
+            <span class="status-pill ${it.status==='ok'?'sp-ok':it.status==='wait'?'sp-wait':'sp-no'}">
+              ${it.status==='ok'?'✓ Aprovado':it.status==='wait'?'⏳ Análise':'✗ Reprovado'}
+            </span>
+          </div>
+          <div>
+            ${it.status==='no'?`
+              <button onclick="notify('📤 Recurso enviado para análise!','ok')"
+                style="font-family:'Share Tech Mono',monospace;font-size:7px;padding:3px 7px;border:1px solid var(--orange);color:var(--orange);background:transparent;cursor:pointer">
+                RECORRER
+              </button>
+            `:it.status==='wait'?`
+              <button onclick="notify('⏳ Aguardando análise da coordenação','warn')"
+                style="font-family:'Share Tech Mono',monospace;font-size:7px;padding:3px 7px;border:1px solid var(--yellow);color:var(--yellow);background:transparent;cursor:pointer">
+                AGUARDAR
+              </button>
+            `:`
+              <button onclick="notify('📄 Comprovante visualizado','ok')"
+                style="font-family:'Share Tech Mono',monospace;font-size:7px;padding:3px 7px;border:1px solid var(--green);color:var(--green);background:transparent;cursor:pointer">
+                VER
+              </button>
+            `}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="alert-strip" style="margin-top:12px;border-left-color:var(--green);background:rgba(0,255,136,.05)">
+      ✅ META ATINGIDA! Você já tem ${total}h — superou as ${needed}h exigidas em +${surplus}h. Certificado Google IT Automation aguarda análise (+30h potenciais). Prazo: Junho 2026.
+    </div>
+  `;
+
+  // Make horas values editable
+  const horasEl = document.getElementById('horas-total');
+  if (horasEl) makeEditable(horasEl, 'horasTotal', 'h');
+}
+
+// ═════════════════════════════════════
+//  RENDER: DISCIPLINAS
+// ═════════════════════════════════════
+function renderDiscs(){
+  const el=document.getElementById('content');
+  const discs=[
+    {
+      period:'Graduação EAD — Mai/Jun 2026',
+      code:'CVCS_EAD_2206551',
+      title:'Programação de Computadores',
+      turma:'Turma_001_NE · Vários instrutores',
+      dot:'d-cyan',status:'Em Andamento',accent:'var(--cyan)',
+      btn:{label:'▶ ACESSAR',fn:"window.open('https://bb.cruzeirodosulvirtual.com.br/ultra/course','_blank');notify('Abrindo disciplina...')"}
+    },
+    {
+      period:'Graduação EAD — Abril 2026',
+      code:'CVCS_EAD_2206553',
+      title:'Prototipagem de Sistemas Computacionais',
+      turma:'Turma_001_NE · Vários instrutores',
+      dot:'d-orange',status:'Em Andamento',accent:'var(--orange)',
+      btn:{label:'▶ ACESSAR',fn:"window.open('https://bb.cruzeirodosulvirtual.com.br/ultra/course','_blank');notify('Abrindo disciplina...')"}
+    },
+    {
+      period:'Graduação EAD — Março 2026',
+      code:'CVCS_EAD_2206520',
+      title:'Engenharia de Prompt e Aplicações em IA',
+      turma:'Turma_002_NE · Vários instrutores',
+      dot:'d-purple',status:'Em Andamento',accent:'var(--purple)',
+      btn:{label:'▶ ACESSAR',fn:"window.open('https://bb.cruzeirodosulvirtual.com.br/ultra/course','_blank');notify('Abrindo disciplina...')"}
+    },
+    {
+      period:'Graduação EAD — Fevereiro 2026',
+      code:'CVCS_EAD_2206523',
+      title:'Interface e Jornada do Usuário',
+      turma:'Turma_002_NE · Vários instrutores',
+      dot:'d-green',status:'Concluído',accent:'var(--green)',
+      btn:{label:'✓ CONCLUÍDO',fn:"notify('✅ Disciplina concluída!','ok')"}
+    },
+    {
+      period:'1º Semestre 2026',
+      code:'DSE_80_FELICIDADE_20261',
+      title:'Felicidade e Qualidade de Vida',
+      turma:'Semestral',
+      dot:'d-yellow',status:'Em Andamento',accent:'var(--yellow)',
+      btn:{label:'▶ ACESSAR',fn:"window.open('https://bb.cruzeirodosulvirtual.com.br/ultra/course','_blank');notify('Abrindo disciplina...')"}
+    },
+    {
+      period:'Outros',
+      code:'cert_0258',
+      title:'Certificado — Aula Inaugural 26/01/2026',
+      turma:'Certificado emitido',
+      dot:'d-green',status:'Concluído',accent:'var(--green)',
+      btn:{label:'📜 CERTIFICADO',fn:"notify('📜 Certificado disponível','ok')"}
+    },
+  ];
+
+  el.innerHTML=`
+    <div class="view-title">
+      <span class="vt-tag">CRUZEIRO DO SUL VIRTUAL</span>
+      <div>
+        <div class="vt-h">Disciplinas — Engenharia de Software</div>
+        <div class="vt-sub">EAD · bb.cruzeirodosulvirtual.com.br · Márcio Mendes</div>
+      </div>
+    </div>
+    <div class="disc-grid">
+      ${discs.map((d,i)=>`
+        <div class="disc-card" style="animation:fadeSlide .4s ease ${i*.06}s both">
+          <div class="disc-accent" style="background:${d.accent}"></div>
+          <div class="disc-period">${d.period}</div>
+          <div class="disc-code">${d.code}</div>
+          <div class="disc-title">${d.title}</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:4px">${d.turma}</div>
+          <div class="disc-status">
+            <div class="disc-dot ${d.dot}"></div>
+            <span class="disc-status-lbl" style="color:${d.accent}">${d.status}</span>
+            <button onclick="${d.btn.fn}"
+              style="margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:8px;
+                padding:4px 10px;border:1px solid ${d.accent};color:${d.accent};
+                background:transparent;cursor:pointer;letter-spacing:1px;transition:.2s"
+              onmouseover="this.style.background='rgba(0,0,0,.4)'"
+              onmouseout="this.style.background='transparent'">${d.btn.label}</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// ═════════════════════════════════════
+//  STUDY MODULES DATA
+// ═════════════════════════════════════
+const STUDY_DATA = {
+  git:{
+    tag:'COURSE 3 · EM ANDAMENTO · 31%',
+    title:'Git & GitHub — Controle de Versão',
+    desc:'Versionamento, colaboração remota e fluxo profissional de desenvolvimento.',
+    topics:[
+      {icon:'📁',text:'Fluxo de trabalho Git',sub:'init · add · commit · push · pull · clone · status · log'},
+      {icon:'🔀',text:'Branches e merging',sub:'git branch · checkout · merge · resolução de conflitos · fast-forward'},
+      {icon:'↩️',text:'Desfazer e recuperar',sub:'git revert · reset --soft/hard · reflog · stash · diff · cherry-pick'},
+      {icon:'🐙',text:'GitHub remoto',sub:'remote · fetch · pull requests · fork · issues · GitHub Actions básico'},
+      {icon:'📝',text:'Boas práticas',sub:'commit semântico · .gitignore · README · branches de feature · código limpo'},
+    ],
+    code:`<span class="cmt"># === Fluxo diário profissional ===</span>
+<span class="kw">git</span> <span class="fn">status</span>                           <span class="cmt"># ver estado</span>
+<span class="kw">git</span> <span class="fn">add</span> .                             <span class="cmt"># stage tudo</span>
+<span class="kw">git</span> <span class="fn">commit</span> -m <span class="str">"feat: minha feature"</span>  <span class="cmt"># commit semântico</span>
+<span class="kw">git</span> <span class="fn">push</span> origin main
+
+<span class="cmt"># === Branches ===</span>
+<span class="kw">git</span> <span class="fn">checkout</span> -b feature/nova-func   <span class="cmt"># criar + mudar</span>
+<span class="cmt"># ... trabalha e commita ...</span>
+<span class="kw">git</span> <span class="fn">checkout</span> main
+<span class="kw">git</span> <span class="fn">merge</span> feature/nova-func
+<span class="kw">git</span> <span class="fn">branch</span> -d feature/nova-func     <span class="cmt"># apagar branch</span>
+
+<span class="cmt"># === Desfazer último commit ===</span>
+<span class="kw">git</span> <span class="fn">revert</span> HEAD                      <span class="cmt"># seguro, mantém histórico</span>
+<span class="kw">git</span> <span class="fn">reset</span> --soft HEAD~1              <span class="cmt"># volta commit, mantém arquivos</span>`,
+    tags:[['GIT','tc'],['GITHUB','tc'],['VERSION CTRL','tg'],['BRANCHES','to'],['OPEN SOURCE','tp']],
+    alert:'⚡ LIÇÃO ATUAL: Review: Undoing Changes Before Committing · Deadline C3: 22 Abr 2026',
+    tips:[
+      'Use <code>git log --oneline --graph --all</code> para visualizar todas as branches graficamente.',
+      'Commits semânticos: feat: · fix: · docs: · refactor: · test: — padrão Conventional Commits.',
+      'NUNCA versione arquivos .env ou credenciais. Configure o .gitignore antes do primeiro commit.',
+      'GitHub Education ativo: use o GitHub Copilot como par de programação, não muleta.',
+    ],
+    cps:['Completar módulo de branches','Resolver conflito de merge na prática','Fazer primeiro Pull Request real','Configurar SSH key no GitHub','Criar repositório no GitHub Education'],
+    cpKey:'cpg3',
+    action:{label:'▶ Retomar no Coursera',fn:"window.open('https://www.coursera.org','_blank');notify('🚀 Abrindo Coursera...')"}
+  },
+  debug:{
+    tag:'COURSE 4 · PRÓXIMO MÓDULO',
+    title:'Troubleshooting & Debugging Python',
+    desc:'Técnicas profissionais de debug, logging e resolução de problemas em scripts Python.',
+    topics:[
+      {icon:'🔍',text:'Debugging interativo',sub:'pdb · breakpoints · VS Code debugger · print estratégico'},
+      {icon:'⚠️',text:'Tipos de exceções Python',sub:'SyntaxError · TypeError · ValueError · AttributeError · exceções customizadas'},
+      {icon:'📋',text:'Logging profissional',sub:'logging module · DEBUG/INFO/WARNING/ERROR/CRITICAL · FileHandler · RotatingFileHandler'},
+      {icon:'⏱️',text:'Profiling de performance',sub:'cProfile · timeit · memory_profiler · identificar gargalos reais'},
+      {icon:'🧪',text:'Testes automatizados',sub:'unittest · pytest · fixtures · mocks · patch · TDD intro · cobertura de código'},
+    ],
+    code:`<span class="kw">import</span> logging
+<span class="kw">import</span> unittest
+<span class="kw">from</span> unittest.mock <span class="kw">import</span> patch
+
+<span class="cmt"># === Setup de logging profissional ===</span>
+logging.<span class="fn">basicConfig</span>(
+    level=logging.DEBUG,
+    format=<span class="str">'%(asctime)s [%(levelname)s] %(name)s: %(message)s'</span>,
+    handlers=[
+        logging.<span class="fn">FileHandler</span>(<span class="str">'app.log'</span>),
+        logging.<span class="fn">StreamHandler</span>()
+    ]
+)
+logger = logging.<span class="fn">getLogger</span>(<span class="str">__name__</span>)
+
+<span class="cmt"># === Unit test com mock ===</span>
+<span class="kw">class</span> <span class="cls">TestMyFunc</span>(unittest.TestCase):
+    <span class="fn">@patch</span>(<span class="str">'module.external_api'</span>)
+    <span class="kw">def</span> <span class="fn">test_success</span>(self, mock_api):
+        mock_api.<span class="fn">return_value</span> = {<span class="str">"status"</span>: <span class="str">"ok"</span>}
+        result = <span class="fn">my_function</span>()
+        self.<span class="fn">assertEqual</span>(result, <span class="str">"ok"</span>)`,
+    tags:[['DEBUG','to'],['LOGGING','tc'],['UNITTEST','tg'],['PYTEST','tp'],['TDD','ty']],
+    alert:'💡 Este curso te transforma: de quem escreve código para quem ENTENDE e CONSERTA código.',
+    tips:[
+      'Use <code>python -m pdb script.py</code> para debug interativo. <code>n</code>=próximo, <code>s</code>=entrar, <code>c</code>=continuar.',
+      'logging é superior ao print: você controla nível, formata saída e pode desativar em produção com uma linha.',
+      'TDD (Test-Driven Development): escreva o teste ANTES do código. Economiza horas de bug depois.',
+      'pytest é mais moderno que unittest: <code>pip install pytest</code> e rode com <code>pytest -v</code>.',
+    ],
+    cps:['Usar pdb em um script real do C3','Criar logging com FileHandler','Escrever 5 unit tests com unittest','Configurar pytest no VS Code','Atingir 80% de cobertura de testes'],
+    cpKey:'cpd4',
+    action:{label:'📘 Ver no Coursera',fn:"window.open('https://www.coursera.org','_blank');notify('Aguardando conclusão do C3...')"}
+  },
+  ia:{
+    tag:'FACULDADE · ENGENHARIA DE PROMPT IA',
+    title:'Engenharia de Prompt e Aplicações em IA',
+    desc:'Arquitetura de agentes LLM, prompt engineering avançado, automação ética e projetos práticos.',
+    topics:[
+      {icon:'🧠',text:'Arquitetura de agentes LLM',sub:'memória · ferramentas · planejamento · ReAct pattern · AutoGPT'},
+      {icon:'✍️',text:'Prompt Engineering avançado',sub:'zero-shot · few-shot · chain-of-thought · tree-of-thought · RAG'},
+      {icon:'⚖️',text:'IA Ética e LGPD',sub:'viés algorítmico · fairness · transparência · LGPD Art.11 · auditoria'},
+      {icon:'📋',text:'exp4 — Triagem ética de CVs',sub:'Agente de recrutamento justo com critérios auditáveis e sem discriminação'},
+      {icon:'🔄',text:'exp3 — Lead Triage Workflow',sub:'Automação de qualificação de leads com validação humana no loop'},
+    ],
+    code:`<span class="cmt"># === Agente ético — exp4 sistema de triagem ===</span>
+system_prompt = <span class="str">"""
+Você é um agente de triagem de currículos.
+
+CRITÉRIOS PERMITIDOS (LGPD-compliant):
+  ✅ Habilidades técnicas comprovadas
+  ✅ Experiência relevante para a vaga
+  ✅ Portfólio e projetos demonstráveis
+
+CRITÉRIOS PROIBIDOS (Art.11 LGPD):
+  ❌ Gênero, idade, etnia, origem, foto
+  ❌ Estado civil, religião, dados biométricos
+
+Para CADA candidato, apresente:
+1. Score técnico (0-10) com justificativa
+2. Recomendação: Avançar / Não avançar
+3. Pontos de atenção objetivos
+"""</span>`,
+    tags:[['LLM','tc'],['PROMPT ENG','to'],['ÉTICA IA','tg'],['AGENTES','tp'],['LGPD','ty']],
+    alert:'🏆 DISCIPLINA CONCLUÍDA! Nota final: 9.5 · Fundamentação Teórica e Experiências Práticas: 5/5 concluídos.',
+    tips:[
+      'Chain-of-Thought funciona melhor pedindo "pense passo a passo antes de responder".',
+      'System prompt bem estruturado = comportamento consistente. Invista tempo nele.',
+      'RAG (Retrieval-Augmented Generation) é o padrão ouro para agentes com base de conhecimento.',
+      'Engenharia de Prompt e Aplicações em IA no C3: CVCS_EAD_2206520 — conecta direto com este módulo!',
+    ],
+    cps:['✅ Fundamentação Teórica — 5/5 concluídos','✅ Experiências Práticas — 5/5 concluídos','✅ exp3 — Lead Triage Workflow entregue','✅ exp4 — Triagem ética de CVs entregue','✅ Disciplina concluída · Nota final: 9.5'],
+    cpKey:'cpia',
+    action:{label:'▶ Acessar Disciplina',fn:"window.open('https://bb.cruzeirodosulvirtual.com.br/ultra/course','_blank');notify('Abrindo disciplina...')"}
+  },
+  backend:{
+    tag:'BOOTCAMP · DIO LUIZALABS · PÓS-JUNHO',
+    title:'Python Back-End — APIs, Banco & Deploy',
+    desc:'Desenvolvimento profissional de APIs REST, banco de dados relacional, Docker e cloud.',
+    topics:[
+      {icon:'🌐',text:'APIs REST com FastAPI',sub:'rotas · CRUD completo · Pydantic v2 · JWT auth · middleware · OpenAPI docs'},
+      {icon:'🏗️',text:'Django & DRF',sub:'models · views · serializers · admin · migrations · Django REST Framework'},
+      {icon:'🗄️',text:'PostgreSQL + SQLAlchemy',sub:'ORM · Alembic migrations · queries avançadas · índices · transactions'},
+      {icon:'🐳',text:'Docker & Containerização',sub:'Dockerfile · docker-compose · volumes · networks · multi-stage builds'},
+      {icon:'☁️',text:'Deploy e Cloud',sub:'Railway · Render · AWS EC2+RDS · GitHub Actions CI/CD · variáveis de ambiente'},
+    ],
+    code:`<span class="cmt"># === FastAPI — API profissional completa ===</span>
+<span class="kw">from</span> fastapi <span class="kw">import</span> FastAPI, HTTPException, Depends
+<span class="kw">from</span> fastapi.security <span class="kw">import</span> OAuth2PasswordBearer
+<span class="kw">from</span> pydantic <span class="kw">import</span> BaseModel
+<span class="kw">from</span> sqlalchemy.orm <span class="kw">import</span> Session
+
+app = <span class="fn">FastAPI</span>(title=<span class="str">"MARCIO API"</span>, version=<span class="str">"1.0.0"</span>)
+oauth2 = <span class="fn">OAuth2PasswordBearer</span>(tokenUrl=<span class="str">"token"</span>)
+
+<span class="kw">class</span> <span class="cls">Operador</span>(BaseModel):
+    nome: str
+    nivel: <span class="num">int</span>
+    email: str
+
+<span class="fn">@app.get</span>(<span class="str">"/health"</span>)
+<span class="kw">async def</span> <span class="fn">health</span>():
+    <span class="kw">return</span> {<span class="str">"status"</span>:<span class="str">"online"</span>,<span class="str">"op"</span>:<span class="str">"Marcio"</span>,<span class="str">"stack"</span>:<span class="str">"FastAPI+PG"</span>}
+
+<span class="fn">@app.post</span>(<span class="str">"/operadores"</span>, status_code=<span class="num">201</span>)
+<span class="kw">async def</span> <span class="fn">criar</span>(op: Operador, db: Session = <span class="fn">Depends</span>(get_db)):
+    <span class="kw">return</span> crud.<span class="fn">create_operador</span>(db, op)`,
+    tags:[['FASTAPI','to'],['DJANGO','tc'],['POSTGRESQL','tg'],['DOCKER','tp'],['CI/CD','ty']],
+    alert:'🚀 META: 2 APIs reais com autenticação no portfólio = ticket de entrada para a primeira vaga back-end.',
+    tips:[
+      'FastAPI gera /docs (Swagger) e /redoc automáticos — impressiona muito em entrevistas técnicas.',
+      'Docker desde o início: containerização é exigida em 90% das vagas back-end sênior e pleno.',
+      'PostgreSQL + SQLAlchemy é a dupla mais usada em projetos Python sérios. Aprenda bem ORM.',
+      'GitHub Actions para CI/CD: automatize testes e deploy a cada push. Diferencial enorme no portfólio.',
+    ],
+    cps:['Criar primeira API FastAPI com CRUD','Conectar PostgreSQL via SQLAlchemy','Implementar autenticação JWT','Dockerizar a aplicação completa','Fazer deploy no Railway ou Render','Escrever testes com pytest para a API'],
+    cpKey:'cpbe',
+    action:{label:'🐍 DIO Luizalabs',fn:"window.open('https://www.dio.me','_blank');notify('Abrindo DIO...')"}
   }
-  document.getElementById('contrib-grid').innerHTML=html;
-})();
+};
+
+// ═════════════════════════════════════
+//  RENDER: STUDY MODULE
+// ═════════════════════════════════════
+function renderStudy(id){
+  const d=STUDY_DATA[id];
+  const el=document.getElementById('content');
+  const saved=JSON.parse(localStorage.getItem(d.cpKey)||'[]');
+
+  el.innerHTML=`
+    <div class="view-title">
+      <span class="vt-tag">${d.tag}</span>
+      <div>
+        <div class="vt-h">${d.title}</div>
+        <div class="vt-sub">${d.desc}</div>
+      </div>
+      <button onclick="${d.action.fn}"
+        style="margin-left:auto;flex-shrink:0;font-family:'Orbitron',monospace;font-size:8px;font-weight:700;
+          padding:8px 14px;border:1px solid var(--cyan);color:var(--cyan);
+          background:rgba(0,220,255,.08);cursor:pointer;letter-spacing:2px;transition:.2s"
+        onmouseover="this.style.background='rgba(0,220,255,.2)'"
+        onmouseout="this.style.background='rgba(0,220,255,.08)'">${d.action.label}</button>
+    </div>
+
+    <div class="study-layout">
+      <div>
+        <div class="panel-box">
+          <div class="panel-title">▸ TÓPICOS DO MÓDULO</div>
+          ${d.topics.map((t,i)=>`
+            <div class="topic-item" style="animation-delay:${i*.05}s">
+              <span class="ti-icon">${t.icon}</span>
+              <div>
+                <span class="ti-text">${t.text}</span>
+                <span class="ti-sub">${t.sub}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="panel-box" style="margin-top:12px">
+          <div class="panel-title">▸ CÓDIGO DE REFERÊNCIA</div>
+          <div class="code-box">${d.code}</div>
+        </div>
+
+        <div class="tags-wrap">${d.tags.map(([t,c])=>`<span class="tag ${c}">${t}</span>`).join('')}</div>
+        <div class="alert-strip">${d.alert}</div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="panel-box">
+          <div class="panel-title">▸ DICAS PRÁTICAS</div>
+          ${d.tips.map((t,i)=>`
+            <div class="tip-item" style="animation-delay:${i*.06}s">
+              <span class="tip-arrow">▷</span>
+              <span>${t}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="panel-box">
+          <div class="panel-title">▸ CHECKPOINTS — <span id="cpCount_${id}" style="color:var(--green)">${saved.length}/${d.cps.length}</span></div>
+          <div class="cp-list" id="cpList_${id}">
+            ${d.cps.map((c,i)=>`
+              <div class="cp-item${saved.includes(i)?' done':''}" onclick="toggleCP('${d.cpKey}','${id}',${i},this)">
+                <div class="cp-box"><span class="cp-tick">✓</span></div>
+                <span class="cp-lbl">${c}</span>
+              </div>
+            `).join('')}
+          </div>
+          <div style="margin-top:10px;height:3px;background:var(--dim2)">
+            <div id="cpProg_${id}" style="height:100%;background:var(--green);transition:width .5s;width:${saved.length/d.cps.length*100}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCP(key,id,idx,el){
+  el.classList.toggle('done');
+  const saved=JSON.parse(localStorage.getItem(key)||'[]');
+  const pos=saved.indexOf(idx);
+  pos===-1?saved.push(idx):saved.splice(pos,1);
+  localStorage.setItem(key,JSON.stringify(saved));
+  // Update counter + bar
+  const d=STUDY_DATA[id];
+  const pct=saved.length/d.cps.length*100;
+  const cc=document.getElementById(`cpCount_${id}`);
+  const cp=document.getElementById(`cpProg_${id}`);
+  if(cc)cc.textContent=`${saved.length}/${d.cps.length}`;
+  if(cp)cp.style.width=pct+'%';
+  if(saved.length===d.cps.length) notify(`🏆 MÓDULO ${id.toUpperCase()} COMPLETO!`,'ok');
+}
+
+// ═════════════════════════════════════
+//  INIT
+// ═════════════════════════════════════
+buildNav();
+buildTabs();
+rebuildSidebarProgress();
+renderDashboard();
 </script>
 </body>
 </html>

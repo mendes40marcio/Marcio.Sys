@@ -1,39 +1,75 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional
+from typing import Literal, Optional
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+# Tipos de estudo. "complementar" separa horas complementares da faculdade
+# dos cursos, para nao inflar a contagem de cursos no painel.
+TipoEstudo = Literal["curso", "complementar", "faculdade", "livro"]
+StatusEstudo = Literal["ativo", "concluido", "pausado"]
+
+
+def _limpa(texto: str) -> str:
+    texto = " ".join(texto.split())
+    if not texto:
+        raise ValueError("nao pode ficar vazio")
+    return texto
 
 
 # ---------- Auth ----------
 class UserCreate(BaseModel):
-    username: str
-    password: str
+    username: str = Field(min_length=3, max_length=40, pattern=r"^[A-Za-z0-9_.-]+$")
+    password: str = Field(min_length=8, max_length=72)
 
 
 class UserOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     username: str
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
+    expires_in: int  # segundos
 
 
 # ---------- Estudo ----------
 class EstudoCreate(BaseModel):
-    curso: str
-    horas: float = 0.0
-    plataforma: str = ""
-    progresso: int = 0
-    status: str = "ativo"
-    tipo: str = "curso"
+    curso: str = Field(max_length=120)
+    horas: float = Field(default=0.0, ge=0, le=10_000)
+    plataforma: str = Field(default="", max_length=60)
+    progresso: int = Field(default=0, ge=0, le=100)
+    status: StatusEstudo = "ativo"
+    tipo: TipoEstudo = "curso"
+
+    _curso = field_validator("curso")(_limpa)
+
+    @field_validator("plataforma")
+    @classmethod
+    def _plataforma(cls, v: str) -> str:
+        return " ".join(v.split())
+
+
+class EstudoUpdate(BaseModel):
+    curso: Optional[str] = Field(default=None, max_length=120)
+    horas: Optional[float] = Field(default=None, ge=0, le=10_000)
+    plataforma: Optional[str] = Field(default=None, max_length=60)
+    progresso: Optional[int] = Field(default=None, ge=0, le=100)
+    status: Optional[StatusEstudo] = None
+    tipo: Optional[TipoEstudo] = None
+
+    @field_validator("curso")
+    @classmethod
+    def _curso(cls, v: Optional[str]) -> Optional[str]:
+        return None if v is None else _limpa(v)
 
 
 class EstudoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     curso: str
     horas: float
@@ -43,34 +79,42 @@ class EstudoOut(BaseModel):
     status: str
     tipo: str
 
-    class Config:
-        from_attributes = True
-        
 
-class EstudoUpdate(BaseModel):
-    curso: Optional[str] = None
-    horas: Optional[float] = None
-    plataforma: Optional[str] = None
-    progresso: Optional[int] = None
-    status: Optional[str] = None
-    tipo: Optional[str] = None        
+class Resumo(BaseModel):
+    total_horas: float
+    horas_cursos: float
+    horas_complementares: float
+    cursos: int
+    concluidos: int
+    por_curso: dict[str, float]
+    por_plataforma: dict[str, float]
+    por_tipo: dict[str, float]
 
 
 # ---------- Meta ----------
 class MetaCreate(BaseModel):
-    titulo: str
-    descricao: str = ""
-    progresso: int = 0
+    titulo: str = Field(max_length=120)
+    descricao: str = Field(default="", max_length=500)
+    progresso: int = Field(default=0, ge=0, le=100)
+
+    _titulo = field_validator("titulo")(_limpa)
 
 
 class MetaUpdate(BaseModel):
-    titulo: Optional[str] = None
-    descricao: Optional[str] = None
-    progresso: Optional[int] = None
+    titulo: Optional[str] = Field(default=None, max_length=120)
+    descricao: Optional[str] = Field(default=None, max_length=500)
+    progresso: Optional[int] = Field(default=None, ge=0, le=100)
     concluida: Optional[bool] = None
+
+    @field_validator("titulo")
+    @classmethod
+    def _titulo(cls, v: Optional[str]) -> Optional[str]:
+        return None if v is None else _limpa(v)
 
 
 class MetaOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: int
     titulo: str
     descricao: str
@@ -78,6 +122,3 @@ class MetaOut(BaseModel):
     progresso: int
     criada_em: datetime
     concluida_em: Optional[datetime]
-
-    class Config:
-        from_attributes = True

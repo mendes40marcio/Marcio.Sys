@@ -87,6 +87,16 @@ small { font-size: .5em; margin-left: 2px; opacity: .8; }
 /* ── Cenário ── */
 .scene { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; }
 .scene .sun { filter: drop-shadow(0 0 40px rgba(255, 110, 120, .55)); }
+/* papel de parede do usuário */
+.wallpaper {
+  position: fixed; inset: calc(var(--papel-blur, 0px) * -2); z-index: 0; display: none;
+  background: center / cover no-repeat;
+  filter: blur(var(--papel-blur, 0px));
+}
+.wallpaper::after { content: ''; position: absolute; inset: 0; background: rgba(10, 3, 22, var(--papel-escuro, .45)); }
+body.tem-papel .wallpaper { display: block; }
+body.tem-papel .scene, body.tem-papel::after { display: none; }
+
 body::after { /* escurece o cenário atrás do conteúdo */
   content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background: linear-gradient(90deg, rgba(10, 3, 22, .78) 0, rgba(10, 3, 22, .45) 40%, rgba(10, 3, 22, .45) 60%, rgba(10, 3, 22, .7) 100%);
@@ -417,7 +427,22 @@ dialog { margin: auto; border: 1px solid var(--line); border-radius: var(--r); b
 dialog::backdrop { background: rgba(5, 0, 15, .7); backdrop-filter: blur(3px); }
 .dlg-title { font-family: var(--display); font-weight: 400; font-size: 1.6rem; letter-spacing: 1px; margin-bottom: 8px; }
 .dlg-text { color: var(--text-2); margin-bottom: 18px; }
-.dlg-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.dlg-actions { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.dlg-papel { width: min(480px, calc(100vw - 32px)); }
+.dlg-papel .dlg { display: flex; flex-direction: column; gap: 14px; }
+.dlg-papel .dlg-title { margin-bottom: 0; }
+.papel-preview {
+  height: 170px; border-radius: var(--r-sm); border: 1px solid var(--line);
+  background: center / cover no-repeat, var(--night-2);
+  display: grid; place-items: center; color: var(--muted); font-size: .9rem;
+}
+.papel-preview.vazio { background: linear-gradient(180deg, #2b0c4e 0%, #7a1d6f 55%, #ff8a4c 100%); color: var(--text); }
+.file-btn { position: relative; cursor: pointer; }
+.file-btn:focus-within { outline: 2px solid var(--gold); outline-offset: 2px; }
+.papel-ajustes { display: flex; flex-direction: column; gap: 10px; }
+.papel-ajustes input[type=range] { accent-color: var(--pink); width: 100%; }
+.papel-ajustes output { font-family: var(--mono); color: var(--gold); }
+.dlg-text:empty { display: none; }
 
 /* barras de rolagem */
 #sidebar, #content, .table-wrap, .code { scrollbar-width: thin; scrollbar-color: rgba(255, 79, 163, .35) transparent; }

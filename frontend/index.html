@@ -81,6 +81,8 @@
     <use href="#palm" x="1250" y="480" width="210" height="430" transform="translate(2710 0) scale(-1 1)"/>
   </g>
 </svg>
+<!-- Papel de parede escolhido pelo usuário (cobre o cenário quando ativo) -->
+<div class="wallpaper" id="wallpaper" aria-hidden="true"></div>
 
 <div id="app">
   <header id="titlebar">
@@ -93,6 +95,7 @@
         <span id="tbTime">--:--</span>
         <span id="tbDate">---</span>
       </div>
+      <button type="button" class="icon-btn" data-action="papel-parede" aria-label="Papel de parede" title="Papel de parede">🖼</button>
       <button type="button" class="icon-btn" data-action="tela-cheia" aria-label="Tela cheia" title="Tela cheia">⛶</button>
     </div>
   </header>
@@ -143,5 +146,6 @@
 
 <div id="notif" class="notif" role="status" aria-live="polite"></div>
 <dialog id="dialog" aria-labelledby="dlgTitle"></dialog>
+<dialog id="dlgPapel" class="dlg-papel" aria-labelledby="papelTitle"></dialog>
 </body>
 </html>

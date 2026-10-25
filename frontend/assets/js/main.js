@@ -5,6 +5,7 @@ import { $, $$, html, mount, notify } from './dom.js';
 import { estado, salvar, definir } from './store.js';
 import { MODULOS } from './content.js';
 import { alternar, reiniciar, mudarModo, iniciarTimer } from './timer.js';
+import { abrirPapel, aplicarPapel } from './wallpaper.js';
 import {
   renderDashboard, renderCoursera, renderHoras, renderDisciplinas, renderModulo, progressoLateral,
 } from './views/estaticas.js';
@@ -113,6 +114,7 @@ const ACOES = {
   'timer-alternar': alternar,
   'timer-reiniciar': reiniciar,
   'timer-modo': (b) => mudarModo(b.dataset.arg),
+  'papel-parede': abrirPapel,
   'tela-cheia': () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.()),
   ...acoesApi,
 };
@@ -168,6 +170,7 @@ function relogio() {
 }
 
 // ── Início ──
+aplicarPapel();
 relogio();
 setInterval(relogio, 15_000);
 iniciarTimer();

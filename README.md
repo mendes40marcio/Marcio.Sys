@@ -1,73 +1,112 @@
-# MARCIO.SYS — Back-end (FastAPI)
+# MARCIO.SYS — Study OS
 
-Back-end do dashboard pessoal MARCIO.SYS. Autenticação JWT, progresso de estudos, metas/conquistas e integração com GitHub.
+Painel pessoal de estudos com **API FastAPI**, autenticação **JWT** e banco **SQLAlchemy**. O painel acompanha minha trilha em Engenharia de Software (horas, cursos, metas e certificados) e é servido pela própria API.
+
+![Painel MARCIO.SYS](docs/dashboard.png)
+
+| Meus Estudos (dados ao vivo) | Celular |
+|---|---|
+| ![Meus Estudos](docs/meus-estudos.png) | ![Celular](docs/mobile.png) |
+
+## O que ele faz
+
+- **Login com JWT**: cada usuário vê só os próprios dados.
+- **Estudos (CRUD completo)**: cadastrar, editar, somar horas, excluir. Tipos `curso`, `complementar`, `faculdade` e `livro`; as horas complementares da faculdade não inflam a contagem de cursos.
+- **Metas e conquistas**: progresso de 0 a 100%; ao chegar em 100% a meta vira conquista com data.
+- **Gráficos** de horas por curso e por plataforma (Chart.js).
+- **Pomodoro**, checkpoints por módulo de estudo e conteúdo das disciplinas.
+- Funciona no celular.
 
 ## Stack
-- **FastAPI** + **Uvicorn**
-- **SQLAlchemy** (SQLite local / PostgreSQL em produção)
-- **JWT** (python-jose) + **bcrypt** para senhas
-- **httpx** para integração com a API do GitHub
 
-## Estrutura
-```
-app/
-├── main.py          # app principal + CORS + rotas
-├── config.py        # configurações (env vars)
-├── database.py      # conexão com o banco
-├── models.py        # tabelas (User, Estudo, Meta)
-├── schemas.py       # validação Pydantic
-├── security.py      # hash de senha + JWT
-└── routers/
-    ├── auth.py      # /auth (register, login, me)
-    ├── estudos.py   # /estudos (CRUD + resumo)
-    ├── metas.py     # /metas (CRUD + conquistas)
-    └── github.py    # /github (perfil, repos)
-```
+| Camada | Tecnologia |
+|---|---|
+| API | FastAPI · Uvicorn · Pydantic v2 |
+| Banco | SQLAlchemy (SQLite local, PostgreSQL em produção) |
+| Autenticação | JWT (python-jose) · bcrypt |
+| Front-end | HTML, CSS e JavaScript (ES modules, sem framework) · Chart.js |
+| Testes | pytest · GitHub Actions |
+| Deploy | Railway |
+
+## Segurança
+
+- Todo dado vindo da API é escapado antes de ir para a tela (proteção contra XSS).
+- **Content-Security-Policy** só permite scripts, fontes e estilos do próprio servidor.
+- Validação no back-end: curso vazio, horas negativas, mais de 24h por sessão, progresso fora de 0–100 e tipos inválidos são recusados.
+- A API não sobe em produção com a `SECRET_KEY` padrão.
+- Sessão expirada (401) leva de volta ao login.
+- O cadastro de novos usuários pode ser desligado (`ALLOW_REGISTER=false`).
 
 ## Rodar local
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate          # Linux/Mac (seu Ubuntu)
-pip install -r requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
-Acesse a documentação interativa em **http://127.0.0.1:8000/docs** (Swagger gerado automático — ótimo pra testar).
+Abra **http://127.0.0.1:8000** (painel) ou **http://127.0.0.1:8000/docs** (Swagger).
 
-## Endpoints principais
+Testes:
+
+```bash
+pytest -q
+```
+
+## Estrutura
+
+```
+app/
+├── main.py            # app, CORS, cabeçalhos de segurança, serve o front-end
+├── config.py          # variáveis de ambiente
+├── database.py        # conexão com o banco
+├── models.py          # tabelas User, Estudo, Meta
+├── schemas.py         # validação Pydantic
+├── security.py        # hash de senha + JWT
+└── routers/           # auth, estudos, metas, github
+frontend/
+├── index.html
+└── assets/
+    ├── css/app.css    # tema "Sunset Drive"
+    ├── js/            # main, api, dom (escape), store, timer, content, views/
+    ├── fonts/         # fontes hospedadas no projeto (SIL OFL)
+    └── vendor/        # Chart.js 4.4.1
+tests/test_api.py      # 12 testes
+```
+
+## Endpoints
 
 | Método | Rota | O que faz |
-|--------|------|-----------|
+|---|---|---|
+| GET | `/health` | Status da API |
 | POST | `/auth/register` | Cria usuário |
 | POST | `/auth/login` | Retorna token JWT |
-| GET | `/auth/me` | Dados do usuário logado |
-| GET/POST | `/estudos` | Lista / cria estudos |
-| PATCH | `/estudos/{id}/horas` | Adiciona horas |
-| GET | `/estudos/resumo` | Total de horas por curso |
-| GET/POST | `/metas` | Lista / cria metas |
-| PATCH | `/metas/{id}` | Atualiza (progresso 100 = conquista) |
+| GET | `/auth/me` | Usuário logado |
+| GET / POST | `/estudos` | Lista / cria estudos |
+| PATCH / DELETE | `/estudos/{id}` | Edita / exclui |
+| PATCH | `/estudos/{id}/horas?horas=1` | Soma horas (até 24 por vez) |
+| GET | `/estudos/resumo` | Totais por curso, plataforma e tipo |
+| GET / POST | `/metas` | Lista / cria metas |
+| PATCH / DELETE | `/metas/{id}` | Atualiza progresso, conclui, reabre / exclui |
 | GET | `/metas/conquistas` | Metas concluídas |
-| GET | `/github/perfil` | Perfil do GitHub |
-| GET | `/github/repos` | Repositórios |
+| GET | `/github/perfil` · `/github/repos` | Dados públicos do GitHub |
 
 ## Deploy no Railway
 
-1. Suba este código pro GitHub (repo novo, ex: `marciosys-backend`).
-2. Em [railway.app](https://railway.app) → **New Project** → **Deploy from GitHub repo**.
-3. Adicione um **PostgreSQL**: New → Database → PostgreSQL. O Railway injeta `DATABASE_URL` automaticamente.
-4. Em **Variables**, configure:
-   - `SECRET_KEY` → gere com `openssl rand -hex 32`
-   - `GITHUB_TOKEN` → opcional, evita rate limit (crie em github.com/settings/tokens)
-   - `FRONTEND_ORIGINS` → já vem com seu GitHub Pages configurado
-5. O Railway detecta o `railway.toml` e sobe sozinho.
-6. Copie a URL gerada (algo como `https://marciosys-backend.up.railway.app`) e cole no `frontend-exemplo.js`.
+1. **New Project → Deploy from GitHub repo** com este repositório.
+2. Adicione um **PostgreSQL** (New → Database). O Railway preenche `DATABASE_URL` sozinho.
+3. Em **Variables**:
+   - `SECRET_KEY`: gere com `openssl rand -hex 32` (obrigatório)
+   - `ALLOW_REGISTER`: `false`, depois de criar sua conta
+   - `GITHUB_TOKEN`: opcional, evita limite de requisições
+4. O painel fica na URL do Railway, junto com a API.
 
-## Conectar ao front-end
-Veja `frontend-exemplo.js` — tem todas as funções prontas pra colar no JS do MARCIO.SYS.
+Para hospedar o painel em outro lugar (Netlify, GitHub Pages), preencha `<meta name="api-base">` no `frontend/index.html` com a URL da API e inclua o domínio em `FRONTEND_ORIGINS`.
 
-## Próximos passos sugeridos
-- Adicionar testes com `pytest`
-- Migrations com `alembic` (em vez de `create_all`)
-- Refresh tokens
-- Cache das respostas do GitHub
+## Próximos passos
+
+- Migrations com Alembic no lugar de `create_all`
+- Dockerfile + docker-compose com PostgreSQL
+- Levar disciplinas e horas complementares para a API
+- Refresh token

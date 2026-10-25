@@ -111,6 +111,20 @@ def test_meta_vira_conquista_e_reabre(auth):
     assert client.delete(f"/metas/{m['id']}", headers=auth).status_code == 204
 
 
+def test_painel_servido_com_csp():
+    r = client.get("/")
+    assert r.status_code == 200
+    assert "text/html" in r.headers["content-type"]
+    csp = r.headers["content-security-policy"]
+    assert "script-src 'self'" in csp and "frame-ancestors 'none'" in csp
+    assert client.get("/assets/js/main.js").status_code == 200
+
+
+def test_cors_nao_aceita_origem_null():
+    r = client.options("/estudos", headers={"Origin": "null", "Access-Control-Request-Method": "GET"})
+    assert r.headers.get("access-control-allow-origin") != "null"
+
+
 def teardown_module():
     engine.dispose()
     if os.path.exists("teste.db"):

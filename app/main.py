@@ -31,11 +31,13 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
+# Tudo (scripts, fontes, Chart.js) e servido pelo proprio projeto,
+# entao a politica so libera 'self'. Estilos inline sao usados nas barras de progresso.
 CSP = (
     "default-src 'self'; "
-    "script-src 'self' https://cdn.jsdelivr.net; "
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-    "font-src 'self' https://fonts.gstatic.com; "
+    "script-src 'self'; "
+    "style-src 'self' 'unsafe-inline'; "
+    "font-src 'self'; "
     "img-src 'self' data:; "
     "connect-src 'self'; "
     "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"

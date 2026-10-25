@@ -1,21 +1,20 @@
-from datetime import datetime, timedelta
-from jose import jwt, JWTError
+from datetime import datetime, timedelta, timezone
+
 import bcrypt
-from datetime import datetime, timedelta
-from jose import jwt, JWTError
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
+from app import models
 from app.config import settings
 from app.database import get_db
-from app import models
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 
 def hash_password(password: str) -> str:
-    # bcrypt limita a 72 bytes; truncamos por seguranca
+    # bcrypt so considera 72 bytes; o schema ja limita o tamanho
     pwd = password.encode("utf-8")[:72]
     return bcrypt.hashpw(pwd, bcrypt.gensalt()).decode("utf-8")
 
@@ -27,7 +26,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
@@ -38,12 +37,12 @@ def get_current_user(
 ) -> models.User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Credenciais invalidas",
+        detail="Sessao expirada ou invalida. Faca login de novo.",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username: str = payload.get("sub")
+        username = payload.get("sub")
         if username is None:
             raise credentials_exception
     except JWTError:

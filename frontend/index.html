@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="MARCIO.SYS — painel pessoal de estudos de Engenharia de Software, com API FastAPI.">
+<meta name="theme-color" content="#140728">
+<meta name="color-scheme" content="dark">
+<!-- Endereço da API. Vazio = mesmo endereço do painel (servido pela API). -->
+<meta name="api-base" content="">
+<title>MARCIO.SYS — Study OS</title>
+<link rel="icon" href="assets/img/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/css/app.css">
+<script src="assets/vendor/chart.umd.min.js" defer></script>
+<script src="assets/js/main.js" type="module"></script>
+</head>
+<body>
+<a class="skip" href="#content">Pular para o conteúdo</a>
+
+<!-- Cenário decorativo: pôr do sol na praia -->
+<svg class="scene" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="g-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0e0420"/>
+      <stop offset=".38" stop-color="#2b0c4e"/>
+      <stop offset=".62" stop-color="#7a1d6f"/>
+      <stop offset=".74" stop-color="#e2407f"/>
+      <stop offset=".8" stop-color="#ff8a4c"/>
+    </linearGradient>
+    <linearGradient id="g-sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffe7a0"/>
+      <stop offset=".45" stop-color="#ffa857"/>
+      <stop offset="1" stop-color="#ff3f8e"/>
+    </linearGradient>
+    <linearGradient id="g-sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3a0f5a"/>
+      <stop offset="1" stop-color="#0c031a"/>
+    </linearGradient>
+    <mask id="m-sun">
+      <rect width="1600" height="900" fill="#fff"/>
+      <rect x="0" y="590" width="1600" height="5" fill="#000"/>
+      <rect x="0" y="616" width="1600" height="8" fill="#000"/>
+      <rect x="0" y="642" width="1600" height="11" fill="#000"/>
+      <rect x="0" y="668" width="1600" height="15" fill="#000"/>
+    </mask>
+    <symbol id="palm" viewBox="0 0 260 420">
+      <path d="M96 420C102 318 112 214 128 112l9 2C124 214 117 318 115 420Z"/>
+      <path d="M132 108Q80 70 26 122Q84 88 132 115Z"/>
+      <path d="M132 106Q94 58 50 54Q100 72 132 111Z"/>
+      <path d="M132 106Q136 52 118 20Q148 58 137 108Z"/>
+      <path d="M132 106Q176 56 222 60Q174 78 134 111Z"/>
+      <path d="M132 108Q194 78 238 134Q182 96 132 115Z"/>
+      <path d="M132 110Q98 122 70 172Q108 130 135 115Z"/>
+      <path d="M132 110Q170 126 190 176Q160 132 131 115Z"/>
+      <circle cx="132" cy="112" r="7"/>
+    </symbol>
+  </defs>
+  <rect width="1600" height="700" fill="url(#g-sky)"/>
+  <g class="stars" fill="#fff">
+    <circle cx="180" cy="90" r="1.4"/><circle cx="420" cy="160" r="1"/><circle cx="640" cy="70" r="1.2"/>
+    <circle cx="980" cy="120" r="1"/><circle cx="1210" cy="60" r="1.5"/><circle cx="1400" cy="180" r="1"/>
+    <circle cx="300" cy="240" r=".9"/><circle cx="1320" cy="300" r=".9"/><circle cx="860" cy="210" r=".8"/>
+  </g>
+  <circle class="sun" cx="800" cy="600" r="210" fill="url(#g-sun)" mask="url(#m-sun)"/>
+  <g class="skyline" fill="#1d0833">
+    <path d="M0 700V652h40v-18h26v18h20v-40h34v40h18v-26h30v26h24v-58h12v-10h20v10h12v58h30v-30h28v30h22v-16h40V700Z"/>
+    <path d="M1600 700V648h-36v-22h-22v22h-26v-46h-14v-12h-22v12h-14v46h-28v-28h-30v28h-20v-18h-34V700Z"/>
+  </g>
+  <rect y="700" width="1600" height="200" fill="url(#g-sea)"/>
+  <g class="reflex" stroke="#ff5fa0" stroke-linecap="round">
+    <line x1="650" y1="716" x2="950" y2="716" stroke-width="4" opacity=".75"/>
+    <line x1="690" y1="738" x2="910" y2="738" stroke-width="3" opacity=".6"/>
+    <line x1="720" y1="762" x2="880" y2="762" stroke-width="3" opacity=".45"/>
+    <line x1="750" y1="790" x2="850" y2="790" stroke-width="2" opacity=".3"/>
+    <line x1="775" y1="822" x2="825" y2="822" stroke-width="2" opacity=".2"/>
+  </g>
+  <g fill="#0b0216">
+    <use href="#palm" x="-70" y="330" width="360" height="590"/>
+    <use href="#palm" x="150" y="470" width="220" height="440"/>
+    <use href="#palm" x="1320" y="300" width="380" height="620" transform="translate(3020 0) scale(-1 1)"/>
+    <use href="#palm" x="1250" y="480" width="210" height="430" transform="translate(2710 0) scale(-1 1)"/>
+  </g>
+</svg>
+<!-- Papel de parede escolhido pelo usuário (cobre o cenário quando ativo) -->
+<div class="wallpaper" id="wallpaper" aria-hidden="true"></div>
+
+<div id="app">
+  <header id="titlebar">
+    <div class="brand">
+      <span class="brand-script">Marcio</span><span class="brand-sys">.SYS</span>
+    </div>
+    <span class="tb-tag">Study OS · v6</span>
+    <div class="tb-right">
+      <div class="tb-clock" aria-label="Data e hora">
+        <span id="tbTime">--:--</span>
+        <span id="tbDate">---</span>
+      </div>
+      <button type="button" class="icon-btn" data-action="papel-parede" aria-label="Papel de parede" title="Papel de parede">🖼</button>
+      <button type="button" class="icon-btn" data-action="tela-cheia" aria-label="Tela cheia" title="Tela cheia">⛶</button>
+    </div>
+  </header>
+
+  <aside id="sidebar">
+    <section class="sb-timer" aria-labelledby="pomoTitle">
+      <h2 class="sb-label" id="pomoTitle">Pomodoro</h2>
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 130 130" aria-hidden="true">
+          <circle class="r-track" cx="65" cy="65" r="60"/>
+          <circle class="r-fill" id="rFill" cx="65" cy="65" r="60"/>
+        </svg>
+        <div class="ring-inner">
+          <span class="r-digits" id="rDigits" role="timer" aria-live="off">25:00</span>
+          <span class="r-mode" id="rLbl">Foco</span>
+        </div>
+      </div>
+      <div class="mode-row" role="group" aria-label="Duração">
+        <button type="button" class="mpill" data-action="timer-modo" data-arg="foco" aria-pressed="true">25 min</button>
+        <button type="button" class="mpill" data-action="timer-modo" data-arg="curta" aria-pressed="false">5 min</button>
+        <button type="button" class="mpill" data-action="timer-modo" data-arg="longa" aria-pressed="false">15 min</button>
+      </div>
+      <div class="t-btns">
+        <button type="button" class="btn btn-primary" id="tBtn" data-action="timer-alternar" aria-pressed="false">Iniciar</button>
+        <button type="button" class="btn btn-ghost" data-action="timer-reiniciar">Zerar</button>
+      </div>
+      <div class="sess-row">
+        <span>Sessões hoje</span>
+        <span class="sdots" id="sdots" role="img"><i class="sdot"></i><i class="sdot"></i><i class="sdot"></i><i class="sdot"></i></span>
+      </div>
+    </section>
+
+    <nav class="sb-nav" aria-label="Seções">
+      <h2 class="sb-label">Navegação</h2>
+      <div id="sbNav"></div>
+    </nav>
+
+    <section class="sb-prog" aria-labelledby="progTitle">
+      <h2 class="sb-label" id="progTitle">Progresso geral</h2>
+      <div id="sidebarProgress"></div>
+    </section>
+  </aside>
+
+  <main id="content" tabindex="-1">
+    <noscript><p class="card">O MARCIO.SYS precisa de JavaScript ativado.</p></noscript>
+  </main>
+</div>
+
+<div id="notif" class="notif" role="status" aria-live="polite"></div>
+<dialog id="dialog" aria-labelledby="dlgTitle"></dialog>
+<dialog id="dlgPapel" class="dlg-papel" aria-labelledby="papelTitle"></dialog>
+</body>
+</html>

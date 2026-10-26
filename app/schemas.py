@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # Tipos de estudo. "complementar" separa horas complementares da faculdade
 # dos cursos, para nao inflar a contagem de cursos no painel.
@@ -122,3 +122,73 @@ class MetaOut(BaseModel):
     progresso: int
     criada_em: datetime
     concluida_em: Optional[datetime]
+
+
+# ---------- Disciplina (graduacao) ----------
+SituacaoDisciplina = Literal["a_iniciar", "cursando", "aprovado", "reprovado"]
+SEMESTRE = r"^\d{4}\.[12]$"  # ex: 2026.1
+
+
+def _confere(nota: Optional[float], situacao: Optional[str], inicio: Optional[date], fim: Optional[date]) -> None:
+    if inicio and fim and fim < inicio:
+        raise ValueError("o fim do periodo nao pode ser antes do inicio")
+    if situacao in ("a_iniciar", "cursando") and nota is not None:
+        raise ValueError("disciplina sem resultado ainda nao pode ter nota")
+    if situacao in ("aprovado", "reprovado") and nota is None:
+        raise ValueError("informe a nota de uma disciplina ja finalizada")
+
+
+class DisciplinaCreate(BaseModel):
+    nome: str = Field(max_length=120)
+    codigo: str = Field(default="", max_length=40)
+    semestre: str = Field(pattern=SEMESTRE)
+    inicio: date
+    fim: date
+    nota: Optional[float] = Field(default=None, ge=0, le=10)
+    situacao: SituacaoDisciplina = "a_iniciar"
+
+    _nome = field_validator("nome")(_limpa)
+
+    @model_validator(mode="after")
+    def _regras(self):
+        _confere(self.nota, self.situacao, self.inicio, self.fim)
+        return self
+
+
+class DisciplinaUpdate(BaseModel):
+    nome: Optional[str] = Field(default=None, max_length=120)
+    codigo: Optional[str] = Field(default=None, max_length=40)
+    semestre: Optional[str] = Field(default=None, pattern=SEMESTRE)
+    inicio: Optional[date] = None
+    fim: Optional[date] = None
+    nota: Optional[float] = Field(default=None, ge=0, le=10)
+    situacao: Optional[SituacaoDisciplina] = None
+
+    @field_validator("nome")
+    @classmethod
+    def _nome(cls, v: Optional[str]) -> Optional[str]:
+        return None if v is None else _limpa(v)
+
+
+class DisciplinaOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    nome: str
+    codigo: str
+    semestre: str
+    inicio: date
+    fim: date
+    nota: Optional[float]
+    situacao: str
+
+
+class ResumoGraduacao(BaseModel):
+    total: int
+    aprovadas: int
+    reprovadas: int
+    cursando: int
+    a_iniciar: int
+    media_geral: Optional[float]           # media das notas ja lancadas
+    media_por_semestre: dict[str, float]
+    em_andamento: list[str]                # nomes das disciplinas sendo cursadas

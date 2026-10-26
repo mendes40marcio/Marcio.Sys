@@ -7,9 +7,9 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import auth, estudos, github, metas
+from app.routers import auth, disciplinas, estudos, github, metas
 
-VERSAO = "1.1.0"
+VERSAO = "1.2.0"
 FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
 
 # Cria as tabelas (proximo passo: migrations com alembic)
@@ -58,6 +58,7 @@ app.include_router(auth.router)
 app.include_router(estudos.router)
 app.include_router(metas.router)
 app.include_router(github.router)
+app.include_router(disciplinas.router)
 
 
 @app.get("/health", tags=["Health"])

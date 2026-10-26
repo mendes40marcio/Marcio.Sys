@@ -1,22 +1,23 @@
 // Ponto de entrada do painel: navegação, relógio e eventos.
 // Nenhum onclick no HTML: todo clique passa pelo listener abaixo, que lê
 // data-action/data-form dos elementos.
-import { $, $$, html, mount, notify } from './dom.js';
+import { $, $$, html, mount, notify, num } from './dom.js';
 import { estado, salvar, definir } from './store.js';
 import { MODULOS } from './content.js';
 import { alternar, reiniciar, mudarModo, iniciarTimer } from './timer.js';
 import { abrirPapel, aplicarPapel } from './wallpaper.js';
 import {
-  renderDashboard, renderCoursera, renderHoras, renderDisciplinas, renderModulo, progressoLateral,
+  renderDashboard, renderCoursera, renderHoras, renderModulo, progressoLateral,
 } from './views/estaticas.js';
 import { renderApi, acoesApi, formsApi, progressoMeta, sessaoExpirada } from './views/api-view.js';
+import { renderDisciplinas, acoesDisc, formsDisc } from './views/disciplinas-view.js';
 
 const VIEWS = [
   { id: 'dash', icone: '◈', titulo: 'Dashboard', sub: 'Visão geral', render: renderDashboard },
   { id: 'api', icone: '🔌', titulo: 'Meus Estudos', sub: 'Ao vivo · API', badge: 'LIVE', render: renderApi },
   { id: 'coursera', icone: '🏆', titulo: 'Google IT Auto', sub: 'Coursera · 7/7', badge: 'OK', render: renderCoursera },
   { id: 'horas', icone: '📋', titulo: 'Horas Compl.', sub: () => `${estado.horasTotal}h / ${estado.horasExigidas}h`, render: renderHoras },
-  { id: 'discs', icone: '🎓', titulo: 'Disciplinas', sub: 'Cruzeiro do Sul', render: renderDisciplinas },
+  { id: 'discs', icone: '🎓', titulo: 'Disciplinas', sub: () => (estado.graduacao?.media_geral != null ? `Média ${num(estado.graduacao.media_geral, 2)}` : 'Cruzeiro do Sul'), render: renderDisciplinas },
   { id: 'git', icone: '🌿', titulo: 'Git & GitHub', sub: 'Course 3 · concluído', render: (el) => renderModulo(el, 'git') },
   { id: 'debug', icone: '🐛', titulo: 'Debugging', sub: 'Course 4 · concluído', render: (el) => renderModulo(el, 'debug') },
   { id: 'ia', icone: '🤖', titulo: 'Agentes de IA', sub: 'Faculdade · nota 9,5', render: (el) => renderModulo(el, 'ia') },
@@ -117,7 +118,10 @@ const ACOES = {
   'papel-parede': abrirPapel,
   'tela-cheia': () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.()),
   ...acoesApi,
+  ...acoesDisc,
 };
+
+const FORMS = { ...formsApi, ...formsDisc };
 
 document.addEventListener('click', (e) => {
   const alvo = e.target.closest('[data-action]');
@@ -130,7 +134,7 @@ document.addEventListener('submit', (e) => {
   const form = e.target.closest('[data-form]');
   if (!form) return;
   e.preventDefault();
-  formsApi[form.dataset.form]?.(form, e.submitter?.value);
+  FORMS[form.dataset.form]?.(form, e.submitter?.value);
 });
 
 // Checkboxes de checkpoint e ranges de meta
@@ -157,6 +161,13 @@ document.addEventListener('input', (e) => {
 window.addEventListener('sessao-expirada', () => {
   notify('Sua sessão expirou. Entre de novo.', 'erro');
   sessaoExpirada();
+  if (atual === 'discs') irPara('discs', { foco: false });
+});
+
+// Resumo da graduação atualizado: refaz a barra lateral (progresso e média no menu)
+window.addEventListener('graduacao-atualizada', () => {
+  construirProgresso();
+  construirNav();
 });
 
 // ── Relógio ──

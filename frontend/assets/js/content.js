@@ -37,13 +37,10 @@ export const HORAS_ITENS = [
   { tipo: 'Cursos online', nome: 'Simplifica Inteligência Artificial Express', ch: 8, data: '17/03/2026', status: 'no' },
 ];
 
-// ── Disciplinas EAD ──
-// O status pode ser alterado no próprio painel (fica salvo no navegador).
-export const DISCIPLINAS = [
-  { id: 'prog', periodo: 'Graduação EAD — Mai/Jun 2026', codigo: 'CVCS_EAD_2206551', titulo: 'Programação de Computadores', turma: 'Turma_001_NE', concluida: false },
-  { id: 'proto', periodo: 'Graduação EAD — Abril 2026', codigo: 'CVCS_EAD_2206553', titulo: 'Prototipagem de Sistemas Computacionais', turma: 'Turma_001_NE', concluida: false },
-  { id: 'prompt', periodo: 'Graduação EAD — Março 2026', codigo: 'CVCS_EAD_2206520', titulo: 'Engenharia de Prompt e Aplicações em IA', turma: 'Turma_002_NE', concluida: true, nota: '9,5' },
-  { id: 'ux', periodo: 'Graduação EAD — Fevereiro 2026', codigo: 'CVCS_EAD_2206523', titulo: 'Interface e Jornada do Usuário', turma: 'Turma_002_NE', concluida: true },
+// ── Itens extras da graduação ──
+// As disciplinas com nota vêm da API (/disciplinas). Aqui ficam só os itens
+// que não aparecem no portal de notas; o status deles fica salvo no navegador.
+export const EXTRAS_GRADUACAO = [
   { id: 'felic', periodo: '1º Semestre 2026', codigo: 'DSE_80_FELICIDADE_20261', titulo: 'Felicidade e Qualidade de Vida', turma: 'Semestral', concluida: false },
   { id: 'aula', periodo: 'Outros', codigo: 'cert_0258', titulo: 'Certificado — Aula Inaugural 26/01/2026', turma: 'Certificado emitido', concluida: true },
 ];

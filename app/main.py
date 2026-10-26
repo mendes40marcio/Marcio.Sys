@@ -49,6 +49,9 @@ async def cabecalhos_de_seguranca(request: Request, call_next):
     resposta = await call_next(request)
     resposta.headers.setdefault("X-Content-Type-Options", "nosniff")
     resposta.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if request.url.path.startswith("/assets/"):
+        # sempre confere com o servidor: evita misturar JS novo com JS antigo em cache
+        resposta.headers.setdefault("Cache-Control", "no-cache")
     if resposta.headers.get("content-type", "").startswith("text/html") and not request.url.path.startswith(("/docs", "/redoc")):
         resposta.headers.setdefault("Content-Security-Policy", CSP)
     return resposta

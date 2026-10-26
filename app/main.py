@@ -7,9 +7,9 @@ from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import Base, engine
-from app.routers import auth, estudos, github, metas
+from app.routers import auth, disciplinas, estudos, github, metas
 
-VERSAO = "1.1.0"
+VERSAO = "1.2.0"
 FRONTEND = Path(__file__).resolve().parent.parent / "frontend"
 
 # Cria as tabelas (proximo passo: migrations com alembic)
@@ -49,6 +49,9 @@ async def cabecalhos_de_seguranca(request: Request, call_next):
     resposta = await call_next(request)
     resposta.headers.setdefault("X-Content-Type-Options", "nosniff")
     resposta.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    if request.url.path.startswith("/assets/"):
+        # sempre confere com o servidor: evita misturar JS novo com JS antigo em cache
+        resposta.headers.setdefault("Cache-Control", "no-cache")
     if resposta.headers.get("content-type", "").startswith("text/html") and not request.url.path.startswith(("/docs", "/redoc")):
         resposta.headers.setdefault("Content-Security-Policy", CSP)
     return resposta
@@ -58,6 +61,7 @@ app.include_router(auth.router)
 app.include_router(estudos.router)
 app.include_router(metas.router)
 app.include_router(github.router)
+app.include_router(disciplinas.router)
 
 
 @app.get("/health", tags=["Health"])

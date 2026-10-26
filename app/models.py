@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, Boolean, Date, DateTime, ForeignKey, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.database import Base
@@ -18,6 +18,7 @@ class User(Base):
 
     estudos = relationship("Estudo", back_populates="owner", cascade="all, delete-orphan")
     metas = relationship("Meta", back_populates="owner", cascade="all, delete-orphan")
+    disciplinas = relationship("Disciplina", back_populates="owner", cascade="all, delete-orphan")
 
 
 class Estudo(Base):
@@ -49,3 +50,21 @@ class Meta(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
 
     owner = relationship("User", back_populates="metas")
+
+
+class Disciplina(Base):
+    """Disciplina da graduacao (ex: Engenharia de Software EAD)."""
+
+    __tablename__ = "disciplinas"
+
+    id = Column(Integer, primary_key=True, index=True)
+    nome = Column(String, nullable=False)           # ex: "Modelagem de Banco de Dados"
+    codigo = Column(String, default="")             # ex: "CVCS_EAD_2308992"
+    semestre = Column(String, nullable=False)       # ex: "2026.1"
+    inicio = Column(Date, nullable=False)           # inicio do periodo da disciplina
+    fim = Column(Date, nullable=False)              # fim do periodo
+    nota = Column(Float, nullable=True)             # media final 0 a 10 (vazia ate sair)
+    situacao = Column(String, default="a_iniciar")  # a_iniciar/cursando/aprovado/reprovado
+    user_id = Column(Integer, ForeignKey("users.id"))
+
+    owner = relationship("User", back_populates="disciplinas")

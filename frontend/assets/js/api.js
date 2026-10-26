@@ -105,4 +105,7 @@ export const api = {
   criarMeta: (dados) => apiCall('/metas', { method: 'POST', body: dados }),
   editarMeta: (id, dados) => apiCall(`/metas/${id}`, { method: 'PATCH', body: dados }),
   apagarMeta: (id) => apiCall(`/metas/${id}`, { method: 'DELETE' }),
+  disciplinas: () => apiCall('/disciplinas'),
+  resumoGraduacao: () => apiCall('/disciplinas/resumo'),
+  editarDisciplina: (id, dados) => apiCall(`/disciplinas/${id}`, { method: 'PATCH', body: dados }),
 };

@@ -1,7 +1,7 @@
 // Telas com conteúdo fixo + estado local.
 import { html, raw, mount, num } from '../dom.js';
-import { estado } from '../store.js';
-import { COURSERA, CERTIFICADOS, HORAS_ITENS, DISCIPLINAS, MODULOS, LINKS } from '../content.js';
+import { estado, definir } from '../store.js';
+import { COURSERA, CERTIFICADOS, HORAS_ITENS, MODULOS, LINKS } from '../content.js';
 import { api, logado } from '../api.js';
 
 // ── Componentes ──
@@ -15,7 +15,7 @@ export const cabecalho = (tag, titulo, sub, extra = '') => html`
     ${extra}
   </header>`;
 
-const link = (url, rotulo, cls = 'btn btn-ghost') =>
+export const link = (url, rotulo, cls = 'btn btn-ghost') =>
   html`<a class="${cls}" href="${url}" target="_blank" rel="noopener noreferrer">${rotulo} <span aria-hidden="true">↗</span></a>`;
 
 // Número que vira campo de edição ao clicar (valor salvo no navegador)
@@ -42,20 +42,28 @@ export function disciplinaConcluida(d) {
 }
 
 export function progressoLateral() {
-  const discsOk = DISCIPLINAS.filter(disciplinaConcluida).length;
+  const g = estado.graduacao;
   return [
     { rotulo: 'Coursera · 7/7', pct: 100 },
     { rotulo: 'Horas complementares', pct: Math.round((estado.horasTotal / estado.horasExigidas) * 100) },
-    { rotulo: 'Disciplinas EAD', pct: Math.round((discsOk / DISCIPLINAS.length) * 100) },
+    { rotulo: 'Disciplinas EAD', pct: g?.total ? Math.round((g.aprovadas / g.total) * 100) : 0 },
     { rotulo: 'DIO Back-End', pct: estado.dioPct, campo: 'dioPct' },
     { rotulo: 'Pós-graduação EAD', pct: estado.posPct, campo: 'posPct' },
   ];
 }
 
+// Card do dashboard com as disciplinas da API (usa o último resumo salvo)
+const cardDisciplinas = (g) => html`
+  <article class="card stat" id="statDiscs">
+    <p class="stat-label">Disciplinas em andamento</p>
+    <p class="stat-value">${g ? g.em_andamento.length : '—'}</p>
+    <p class="stat-sub">${g ? (g.em_andamento.map((n) => n.split(' ')[0]).join(' · ') || 'Nenhuma no momento') : 'Entre em Meus Estudos para sincronizar'}</p>
+    ${barra(g?.total ? (g.aprovadas / g.total) * 100 : 0, 'var(--violet)')}
+  </article>`;
+
 // ── Dashboard ──
 export function renderDashboard(el) {
   const sobra = estado.horasTotal - estado.horasExigidas;
-  const ativas = DISCIPLINAS.filter((d) => !disciplinaConcluida(d) && d.periodo !== 'Outros');
 
   mount(el, html`
     ${cabecalho('Visão geral', 'Central de Estudos', 'Engenharia de Software · Cruzeiro do Sul Virtual · trilha para AI Engineering e Indústria 4.0')}
@@ -74,7 +82,7 @@ export function renderDashboard(el) {
         <p class="stat-sub">de ${estado.horasExigidas}h exigidas · ${sobra >= 0 ? `+${sobra}h de sobra` : `faltam ${-sobra}h`}</p>
         ${barra((estado.horasTotal / estado.horasExigidas) * 100, 'var(--mint)')}
       </article>
-      ${statCard({ rotulo: 'Disciplinas em andamento', valor: ativas.length, sub: ativas.map((d) => d.titulo.split(' ')[0]).join(' · ') || 'Nenhuma no momento', pct: 100 - (ativas.length / DISCIPLINAS.length) * 100, cor: 'var(--violet)' })}
+      ${cardDisciplinas(estado.graduacao)}
     </section>
 
     <section class="grid-2">
@@ -109,15 +117,22 @@ export function renderDashboard(el) {
 async function carregarFaixaAoVivo() {
   const faixa = document.getElementById('liveStrip');
   try {
-    const r = await api.resumo();
+    const [r, g] = await Promise.all([api.resumo(), api.resumoGraduacao().catch(() => null)]);
+    if (g) {
+      definir('graduacao', g);
+      window.dispatchEvent(new CustomEvent('graduacao-atualizada'));
+    }
     if (!faixa.isConnected) return;
     mount(faixa, html`
       <div class="live-grid">
         <div><span class="live-num">${num(r.horas_cursos)}h</span><span class="muted">em cursos</span></div>
         <div><span class="live-num">${r.cursos}</span><span class="muted">cursos · ${r.concluidos} concluídos</span></div>
         <div><span class="live-num">${num(r.horas_complementares)}h</span><span class="muted">complementares na API</span></div>
+        ${g?.media_geral != null ? html`<div><span class="live-num">${num(g.media_geral, 2)}</span><span class="muted">média na faculdade</span></div>` : ''}
         <span class="live-tag">● ao vivo</span>
       </div>`);
+    const card = document.getElementById('statDiscs');
+    if (g && card) card.outerHTML = cardDisciplinas(g).toString();
   } catch (e) {
     if (faixa.isConnected) mount(faixa, html`<p class="muted">Não deu para carregar os números ao vivo: ${e.message}</p>`);
   }
@@ -183,30 +198,6 @@ export function renderHoras(el) {
             </tr>`)}
         </tbody>
       </table>
-    </div>
-  `);
-}
-
-// ── Disciplinas ──
-export function renderDisciplinas(el) {
-  mount(el, html`
-    ${cabecalho('Cruzeiro do Sul Virtual', 'Disciplinas — Engenharia de Software', 'EAD · marque como concluída quando fechar a nota', link(LINKS.blackboard, 'Abrir Blackboard', 'btn btn-primary'))}
-    <div class="grid-cards">
-      ${DISCIPLINAS.map((d) => {
-        const ok = disciplinaConcluida(d);
-        return html`
-          <article class="card disc ${ok ? 'is-done' : ''}">
-            <p class="eyebrow">${d.periodo}</p>
-            <h2 class="disc-title">${d.titulo}</h2>
-            <p class="mono muted small">${d.codigo} · ${d.turma}</p>
-            <div class="disc-foot">
-              <span class="pill ${ok ? 'pill-ok' : 'pill-wait'}">${ok ? 'Concluída' : 'Em andamento'}${d.nota && ok ? ` · nota ${d.nota}` : ''}</span>
-              <button type="button" class="btn btn-ghost btn-sm" data-action="disciplina" data-arg="${d.id}" aria-pressed="${ok}">
-                ${ok ? 'Reabrir' : 'Marcar concluída'}
-              </button>
-            </div>
-          </article>`;
-      })}
     </div>
   `);
 }

@@ -11,7 +11,8 @@ const PADRAO = {
   horasExigidas: 170,
   dioPct: 0,           // progresso no bootcamp DIO (manual)
   posPct: 10,          // progresso na pós-graduação (manual)
-  disciplinas: {},     // { idDisciplina: true|false } sobrescreve o padrão
+  disciplinas: {},     // { idDisciplina: true|false } sobrescreve o padrão (itens extras)
+  graduacao: null,     // último resumo de /disciplinas/resumo (barra lateral e dashboard)
   checkpoints: {},     // { cpKey: [indices marcados] }
   pomodoro: { dia: '', sessoes: 0 },
 };
